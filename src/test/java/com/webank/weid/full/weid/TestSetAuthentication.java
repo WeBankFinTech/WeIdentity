@@ -155,7 +155,7 @@ public class TestSetAuthentication extends TestBaseService {
             createWeIdResult.getUserWeIdPrivateKey());
         LogUtil.info(logger, "setAuthentication", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_DOES_NOT_EXIST.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }

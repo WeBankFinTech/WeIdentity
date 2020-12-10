@@ -24,11 +24,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +35,8 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -630,20 +628,17 @@ public class TestBaseUtil {
     public static PasswordKey createEcKeyPair() {
 
         PasswordKey passwordKey = new PasswordKey();
-        try {
-            ECKeyPair keyPair = Keys.createEcKeyPair();
-            String publicKey = String.valueOf(keyPair.getPublicKey());
-            String privateKey = String.valueOf(keyPair.getPrivateKey());
-            passwordKey.setPrivateKey(privateKey);
-            passwordKey.setPublicKey(publicKey);
-            LogUtil.info(logger, "createEcKeyPair", passwordKey);
-        } catch (InvalidAlgorithmParameterException e) {
-            logger.error("createEcKeyPair error:", e);
-        } catch (NoSuchAlgorithmException e) {
-            logger.error("createEcKeyPair error:", e);
-        } catch (NoSuchProviderException e) {
-            logger.error("createEcKeyPair error:", e);
-        }
+        CryptoKeyPair keyPair = DataToolUtils.createKeyPair();
+        BigInteger bigPublicKey = 
+            new BigInteger(1, Numeric.hexStringToByteArray(keyPair.getHexPublicKey()));
+        BigInteger bigPrivateKey = 
+            new BigInteger(1, Numeric.hexStringToByteArray(keyPair.getHexPrivateKey()));
+        
+        String publicKey = String.valueOf(bigPublicKey);
+        String privateKey = String.valueOf(bigPrivateKey);
+        passwordKey.setPrivateKey(privateKey);
+        passwordKey.setPublicKey(publicKey);
+        LogUtil.info(logger, "createEcKeyPair", passwordKey);
         return passwordKey;
     }
 

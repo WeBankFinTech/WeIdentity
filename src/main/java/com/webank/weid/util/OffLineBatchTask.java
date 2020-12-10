@@ -1,5 +1,6 @@
 package com.webank.weid.util;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,8 +9,6 @@ import java.util.Map;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,13 +46,10 @@ public class OffLineBatchTask extends AbstractService {
     private static Persistence dataDriver;
 
     static {
+        BigInteger bigPrivateKey = 
+            new BigInteger(DataToolUtils.createKeyPair().getHexPrivateKey());
+        privateKey = String.valueOf(bigPrivateKey);
 
-        try {
-            ECKeyPair keyPair = Keys.createEcKeyPair();
-            privateKey = String.valueOf(keyPair.getPrivateKey());
-        } catch (Exception e) {
-            logger.error("Create weId failed.", e);
-        }
     }
 
     private static Persistence getDataDriver() {

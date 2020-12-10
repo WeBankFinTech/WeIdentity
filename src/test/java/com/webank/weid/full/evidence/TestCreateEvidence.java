@@ -32,7 +32,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
 import com.webank.weid.common.LogUtil;
 import com.webank.weid.constant.ErrorCode;
@@ -650,14 +649,18 @@ public class TestCreateEvidence extends TestBaseService {
         Assert.assertTrue(evidenceService.generateHash(selectiveCredentialPojo).getResult()
             .getHash().equalsIgnoreCase(selectiveCredentialPojo.getHash()));
         // Test file
-        File file = new ClassPathResource("test-template.pdf").getFile();
+        String path = TestCreateEvidence.class
+            .getClassLoader().getResource("test-template.pdf").getPath();
+        File file = new File(path);
         String fileHash = evidenceService.generateHash(file).getResult().getHash();
         Assert.assertFalse(StringUtils.isEmpty(fileHash));
         // Support GBK and UTF-8 encoding here - they will yield different hash values, though
-        file = new ClassPathResource("org1.txt").getFile();
+        path = TestCreateEvidence.class.getClassLoader().getResource("org1.txt").getPath();
+        file = new File(path);
         fileHash = evidenceService.generateHash(file).getResult().getHash();
         Assert.assertFalse(StringUtils.isEmpty(fileHash));
-        file = new ClassPathResource("test-hash-pic.png").getFile();
+        path = TestCreateEvidence.class.getClassLoader().getResource("test-hash-pic.png").getPath();
+        file = new File(path);
         fileHash = evidenceService.generateHash(file).getResult().getHash();
         Assert.assertFalse(StringUtils.isEmpty(fileHash));
         // Non-existent file - uncreated with createNewFile()

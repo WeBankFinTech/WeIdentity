@@ -21,8 +21,8 @@ package com.webank.weid.protocol.response;
 
 import lombok.Data;
 
-import org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Uint8;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Bytes32;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Uint8;
 
 /**
  * The internal base RSV signature data class.

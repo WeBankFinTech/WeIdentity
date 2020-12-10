@@ -19,14 +19,14 @@
 
 package com.webank.weid.util;
 
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.webank.weid.common.PasswordKey;
+import com.webank.weid.full.TestBaseUtil;
 import com.webank.weid.suite.api.crypto.CryptoServiceFactory;
 import com.webank.weid.suite.api.crypto.params.Asymmetrickey;
 import com.webank.weid.suite.api.crypto.params.CryptoType;
@@ -77,9 +77,9 @@ public class TestCrypt {
     public void testEcies_withPadding() throws Exception {
         // 外围有padding操作
         for (int i = 0; i < 1000; i++) {
-            ECKeyPair keyPair = Keys.createEcKeyPair();
-            String publicKey = keyPair.getPublicKey().toString();
-            String privateKey = keyPair.getPrivateKey().toString();
+            PasswordKey createEcKeyPair = TestBaseUtil.createEcKeyPair();
+            String publicKey = createEcKeyPair.getPublicKey();
+            String privateKey = createEcKeyPair.getPrivateKey();
             String pubBase64 = KeyGenerator.decimalKeyToBase64(publicKey);
             String priBase64 = KeyGenerator.decimalKeyToBase64(privateKey);
             logger.info("pub key base64: {}", pubBase64);
@@ -101,9 +101,9 @@ public class TestCrypt {
     public void testEcies_noPadding() throws Exception {
         // 外围没有padding操作
         for (int i = 0; i < 1000; i++) {
-            ECKeyPair keyPair = Keys.createEcKeyPair();
-            String publicKey = keyPair.getPublicKey().toString();
-            String privateKey = keyPair.getPrivateKey().toString();
+            PasswordKey createEcKeyPair = TestBaseUtil.createEcKeyPair();
+            String publicKey = createEcKeyPair.getPublicKey();
+            String privateKey = createEcKeyPair.getPrivateKey();
             logger.info("pub key: {}", publicKey);
             logger.info("pri key: {}", privateKey);
             String original = json;
@@ -121,9 +121,9 @@ public class TestCrypt {
     @Test
     public void testDecimalKey() throws Exception {
         for (int i = 0; i < 1000; i++) {
-            ECKeyPair keyPair = Keys.createEcKeyPair();
-            String publicKey = keyPair.getPublicKey().toString();
-            String privateKey = keyPair.getPrivateKey().toString();
+            PasswordKey createEcKeyPair = TestBaseUtil.createEcKeyPair();
+            String publicKey = createEcKeyPair.getPublicKey();
+            String privateKey = createEcKeyPair.getPrivateKey();
             String pubBase64 = KeyGenerator.decimalKeyToBase64(publicKey);
             String priBase64 = KeyGenerator.decimalKeyToBase64(privateKey);
             String decimalPubKey = KeyGenerator.base64KeyTodecimal(pubBase64);

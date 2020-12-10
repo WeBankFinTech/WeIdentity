@@ -21,16 +21,13 @@ package com.webank.weid.service.impl;
 
 import java.io.File;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Sign.SignatureData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,7 +82,6 @@ public class EvidenceServiceImpl extends AbstractService implements EvidenceServ
      * @param groupId 群组编号
      */
     public EvidenceServiceImpl(ProcessingMode processingMode, Integer groupId) {
-        super(groupId);
         this.processingMode = processingMode;
         initEvidenceServiceEngine(groupId);
     }
@@ -620,10 +616,6 @@ public class EvidenceServiceImpl extends AbstractService implements EvidenceServ
         if (!DataToolUtils.isValidBase64String(signature)) {
             return new ResponseData<>(false, ErrorCode.CREDENTIAL_EVIDENCE_SIGNATURE_BROKEN);
         }
-        SignatureData signatureData =
-            DataToolUtils.simpleSignatureDeserialization(
-                DataToolUtils.base64Decode(signature.getBytes(StandardCharsets.UTF_8))
-            );
 
         // Firstly, we check the secp256k1 style signature
         if (StringUtils.isEmpty(publicKey)) {

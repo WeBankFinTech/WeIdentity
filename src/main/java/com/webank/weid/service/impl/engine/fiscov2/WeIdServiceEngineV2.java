@@ -27,17 +27,16 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.zip.DataFormatException;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.abi.EventEncoder;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockTransactionReceipts;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Log;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.abi.EventEncoder;
+import org.fisco.bcos.sdk.client.protocol.response.BcosTransactionReceiptsDecoder;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.model.CryptoType;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.TransactionReceipt.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +94,9 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
         topicMap = new HashMap<String, String>();
 
         topicMap.put(
-            EventEncoder.encode(WeIdContract.WEIDATTRIBUTECHANGED_EVENT),
+            new EventEncoder(new CryptoSuite(CryptoType.ECDSA_TYPE)).encode(
+                WeIdContract.WEIDATTRIBUTECHANGED_EVENT
+            ),
             WeIdEventConstant.WEID_EVENT_ATTRIBUTE_CHANGE
         );
     }
@@ -125,7 +126,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
         try {
 
             boolean isExist = weIdContract
-                .isIdentityExist(WeIdUtils.convertWeIdToAddress(weId)).send().booleanValue();
+                .isIdentityExist(WeIdUtils.convertWeIdToAddress(weId)).booleanValue();
             return new ResponseData<>(isExist, ErrorCode.SUCCESS);
         } catch (Exception e) {
             logger.error("[isWeIdExist] execute failed. Error message :{}", e);
@@ -156,8 +157,8 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
             try {
                 List<TransactionReceipt> receipts = getTransactionReceipts(currentBlockNumber);
                 for (TransactionReceipt receipt : receipts) {
-                    List<Log> logs = receipt.getLogs();
-                    for (Log log : logs) {
+                    List<Logs> logs = receipt.getLogs();
+                    for (Logs log : logs) {
                         ResolveEventLogResult returnValue =
                             resolveSingleEventLog(weId, log, receipt, currentBlockNumber,
                                 blockEventMap);
@@ -183,7 +184,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
 
     private static ResolveEventLogResult resolveSingleEventLog(
         String weId,
-        Log log,
+        Logs log,
         TransactionReceipt receipt,
         int currentBlockNumber,
         Map<Integer, List<WeIdAttributeChangedEventResponse>> blockEventMap
@@ -263,7 +264,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
         try {
             String identityAddr = WeIdUtils.convertWeIdToAddress(weId);
             latestBlockNumber = weIdContract
-                .getLatestRelatedBlock(identityAddr).send().intValue();
+                .getLatestRelatedBlock(identityAddr).intValue();
             if (0 == latestBlockNumber) {
                 return new ResponseData<>(null, ErrorCode.WEID_DOES_NOT_EXIST);
             }
@@ -278,12 +279,6 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
             constructWeIdDocument(blockList, blockEventMap, result);
 
             return new ResponseData<>(result, ErrorCode.SUCCESS);
-        } catch (InterruptedException | ExecutionException e) {
-            logger.error("Set weId service failed. Error message :{}", e);
-            return new ResponseData<>(null, ErrorCode.TRANSACTION_EXECUTE_ERROR);
-        } catch (TimeoutException e) {
-            logger.error("Set weId service timeout. Error message :{}", e);
-            return new ResponseData<>(null, ErrorCode.TRANSACTION_TIMEOUT);
         } catch (ResolveAttributeException e) {
             logger.error("[getWeIdDocument]: resolveTransaction failed. "
                     + "weId: {}, errorCode:{}",
@@ -519,7 +514,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
                     DataToolUtils.stringToByteArray(auth),
                     DataToolUtils.stringToByteArray(created),
                     BigInteger.valueOf(DateUtils.getNoMillisecondTimeStamp())
-                ).send();
+                );
             } else {
 
                 receipt = weIdContract.createWeId(
@@ -527,7 +522,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
                     DataToolUtils.stringToByteArray(auth),
                     DataToolUtils.stringToByteArray(created),
                     BigInteger.valueOf(DateUtils.getNoMillisecondTimeStamp())
-                ).send();
+                );
             }
 
             TransactionInfo info = new TransactionInfo(receipt);
@@ -572,7 +567,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
                     DataToolUtils.stringToByte32Array(attributeKey),
                     attrValue,
                     updated
-                ).send();
+                );
             } else {
                 transactionReceipt =
                     weIdContract.setAttribute(
@@ -580,7 +575,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
                         DataToolUtils.stringToByte32Array(attributeKey),
                         attrValue,
                         updated
-                    ).send();
+                    );
             }
 
             TransactionInfo info = new TransactionInfo(transactionReceipt);
@@ -600,10 +595,10 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
 
     private static List<TransactionReceipt> getTransactionReceipts(Integer blockNumber) 
         throws IOException, DataFormatException {
-        BlockTransactionReceipts blockTransactionReceipts = null;
+        BcosTransactionReceiptsDecoder blockTransactionReceipts = null;
         try {
-            blockTransactionReceipts = ((Web3j)getWeb3j())
-                .getBlockTransactionReceipts(BigInteger.valueOf(blockNumber)).send();
+            blockTransactionReceipts = getClient().getBatchReceiptsByBlockNumberAndRange(
+               BigInteger.valueOf(blockNumber), "0", "-1");
         } catch (Exception e) {
             logger.error("[getTransactionReceipts] get block {} err: {}", blockNumber, e);
         }
@@ -611,7 +606,8 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
             logger.info("[getTransactionReceipts] get block {} err: is null", blockNumber);
             throw new WeIdBaseException("the transactionReceipts is null.");
         }
-        return blockTransactionReceipts.getBlockTransactionReceipts().getTransactionReceipts();
+        
+        return blockTransactionReceipts.decodeTransactionReceiptsInfo().getTransactionReceipts();
     }
 
     private List<WeIdPojo> getWeIdListByBlockNumber(Integer blockNumber) {
@@ -634,7 +630,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
                     pojo.setPreviousBlockNum(res.previousBlock.intValue());
                     boolean isExist = weIdContract
                         .isIdentityExist(WeIdUtils.convertWeIdToAddress(pojo.getId()))
-                        .send()
+                        
                         .booleanValue();
                     if (isExist) {
                         pojo.setIndex(index);
@@ -664,7 +660,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
      * @throws Exception unknown exception
      */
     private Integer getFirstBlockNum() throws Exception {
-        return weIdContract.getFirstBlockNum().send().intValue();
+        return weIdContract.getFirstBlockNum().intValue();
     }
 
     /**
@@ -673,7 +669,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
      * @throws Exception unknown exception
      */
     private Integer getLatestBlockNum() throws Exception {
-        return weIdContract.getLatestBlockNum().send().intValue();
+        return weIdContract.getLatestBlockNum().intValue();
     }
 
     /**
@@ -685,7 +681,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
     private Integer getNextBlockNum(Integer blockNumber) throws Exception {
         return weIdContract.getNextBlockNumByBlockNum(
                 new BigInteger(String.valueOf(blockNumber))
-            ).send().intValue();
+            ).intValue();
     }
 
     @Override
@@ -797,7 +793,7 @@ public class WeIdServiceEngineV2 extends BaseEngine implements WeIdServiceEngine
     @Override
     public ResponseData<Integer> getWeIdCount() {
         try {
-            Integer total = weIdContract.getWeIdCount().send().intValue();
+            Integer total = weIdContract.getWeIdCount().intValue();
             return new ResponseData<>(total, ErrorCode.SUCCESS); 
         } catch (Exception e) {
             logger.error("[getWeIdTotal]: get weId total has unknow error. ", e);

@@ -19,14 +19,15 @@
 
 package com.webank.weid.service.impl;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,17 +72,13 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
     public ResponseData<CreateWeIdDataResult> createWeId() {
 
         CreateWeIdDataResult result = new CreateWeIdDataResult();
-        ECKeyPair keyPair = null;
-
-        try {
-            keyPair = Keys.createEcKeyPair();
-        } catch (Exception e) {
-            logger.error("Create weId failed.", e);
-            return new ResponseData<>(null, ErrorCode.WEID_KEYPAIR_CREATE_FAILED);
-        }
-
-        String publicKey = String.valueOf(keyPair.getPublicKey());
-        String privateKey = String.valueOf(keyPair.getPrivateKey());
+        CryptoKeyPair keyPair = DataToolUtils.createKeyPair();
+        BigInteger bigPublicKey = 
+            new BigInteger(1, Numeric.hexStringToByteArray(keyPair.getHexPublicKey()));
+        BigInteger bigPrivateKey = 
+            new BigInteger(1, Numeric.hexStringToByteArray(keyPair.getHexPrivateKey()));
+        String publicKey = String.valueOf(bigPublicKey);
+        String privateKey = String.valueOf(bigPrivateKey);
         WeIdPublicKey userWeIdPublicKey = new WeIdPublicKey();
         userWeIdPublicKey.setPublicKey(publicKey);
         result.setUserWeIdPublicKey(userWeIdPublicKey);

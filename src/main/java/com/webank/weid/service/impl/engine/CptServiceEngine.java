@@ -45,6 +45,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * @param cptJsonSchemaNew cpt content
      * @param rsvSignature signature
      * @param privateKey private key
+     * @param dataStorageIndex storage type index
      * @return result
      */
     ResponseData<CptBaseInfo> updateCpt(
@@ -64,6 +65,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * @param cptJsonSchemaNew cpt content
      * @param rsvSignature signature
      * @param privateKey private key
+     * @param dataStorageIndex storage type index
      * @return result
      */
     ResponseData<CptBaseInfo> registerCpt(
@@ -82,6 +84,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * @param cptJsonSchemaNew cpt content
      * @param rsvSignature signature
      * @param privateKey private key
+     * @param dataStorageIndex storage type index
      * @return result
      */
     ResponseData<CptBaseInfo> registerCpt(
@@ -96,6 +99,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * call cpt contract method to query cpt info from blockchain.
      *
      * @param cptId the id of the cpt
+     * @param dataStorageIndex storage type index
      * @return cpt info
      */
     ResponseData<Cpt> queryCpt(int cptId, int dataStorageIndex);

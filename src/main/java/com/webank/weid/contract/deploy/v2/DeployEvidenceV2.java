@@ -22,10 +22,9 @@ package com.webank.weid.contract.deploy.v2;
 import java.math.BigInteger;
 
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.crypto.gm.GenCredential;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
+import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +35,7 @@ import com.webank.weid.contract.deploy.AddressProcess;
 import com.webank.weid.contract.v2.EvidenceContract;
 import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.service.BaseService;
+import com.webank.weid.util.DataToolUtils;
 
 public class DeployEvidenceV2 extends AddressProcess {
     
@@ -47,36 +47,39 @@ public class DeployEvidenceV2 extends AddressProcess {
     /**
      * The credentials.
      */
-    private static Credentials credentials;
+    private static CryptoKeyPair cryptoKeyPair;
     
     /**
      * Inits the credentials.
      *
      * @return true, if successful
      */
-    private static String initCredentials(String inputPrivateKey) {
+    private static String initCryptoKeyPair(String inputPrivateKey) {
         if (StringUtils.isNotBlank(inputPrivateKey)) {
             logger.info("[DeployEvidenceV2] begin to init credentials by privateKey..");
-            credentials = GenCredential.create(new BigInteger(inputPrivateKey).toString(16));
+            cryptoKeyPair = DataToolUtils.createKeyPairFromPrivate(new BigInteger(inputPrivateKey));
         } else {
             // 此分支逻辑实际情况不会执行，因为通过build-tool进来是先给创建私钥
             logger.info("[DeployEvidenceV2] begin to init credentials..");
-            credentials = GenCredential.create();
-            String privateKey = credentials.getEcKeyPair().getPrivateKey().toString();
-            String publicKey = credentials.getEcKeyPair().getPublicKey().toString();
+            cryptoKeyPair = DataToolUtils.createKeyPair();
+            byte[] priBytes = Numeric.hexStringToByteArray(cryptoKeyPair.getHexPrivateKey());
+            byte[] pubBytes = Numeric.hexStringToByteArray(cryptoKeyPair.getHexPublicKey());
+            String privateKey = new BigInteger(1, priBytes).toString();
+            String publicKey = new BigInteger(1, pubBytes).toString();
             writeAddressToFile(publicKey, "ecdsa_key.pub");
             writeAddressToFile(privateKey, "ecdsa_key");
         }
 
-        if (credentials == null) {
+        if (cryptoKeyPair == null) {
             logger.error("[DeployEvidenceV2] credentials init failed. ");
             return StringUtils.EMPTY;
         }
-        return credentials.getEcKeyPair().getPrivateKey().toString();
+        byte[] priBytes = Numeric.hexStringToByteArray(cryptoKeyPair.getHexPrivateKey());
+        return new BigInteger(1, priBytes).toString();
     }
     
-    protected static Web3j getWeb3j(Integer groupId) {
-        return (Web3j) BaseService.getWeb3j(groupId);
+    protected static Client getClient(Integer groupId) {
+        return BaseService.getClient(groupId);
     }
     
     public static String deployContract(
@@ -85,7 +88,7 @@ public class DeployEvidenceV2 extends AddressProcess {
         Integer groupId, 
         boolean instantEnable
     ) {
-        String privateKey = initCredentials(inputPrivateKey);
+        String privateKey = initCryptoKeyPair(inputPrivateKey);
         // 构建私钥对象
         WeIdPrivateKey weIdPrivateKey = new WeIdPrivateKey();
         weIdPrivateKey.setPrivateKey(privateKey);
@@ -138,10 +141,9 @@ public class DeployEvidenceV2 extends AddressProcess {
         try {
             EvidenceContract evidenceContract =
                 EvidenceContract.deploy(
-                    getWeb3j(groupId),
-                    credentials,
-                    new StaticGasProvider(WeIdConstant.GAS_PRICE, WeIdConstant.GAS_LIMIT)
-                ).send();
+                    getClient(groupId),
+                    cryptoKeyPair
+                );
             String evidenceContractAddress = evidenceContract.getContractAddress();
             return evidenceContractAddress;
         } catch (Exception e) {

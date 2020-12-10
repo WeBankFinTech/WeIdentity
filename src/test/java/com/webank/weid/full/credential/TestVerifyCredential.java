@@ -19,13 +19,11 @@
 
 package com.webank.weid.full.credential;
 
-import java.security.SignatureException;
 import java.util.Map;
 
 import mockit.Mock;
 import mockit.MockUp;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Sign;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -46,7 +44,6 @@ import com.webank.weid.protocol.base.WeIdDocument;
 import com.webank.weid.protocol.request.CreateCredentialArgs;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.service.impl.WeIdServiceImpl;
-import com.webank.weid.util.DataToolUtils;
 
 /**
  * verifyCredential method for testing CredentialService.
@@ -385,27 +382,6 @@ public class TestVerifyCredential extends TestBaseService {
     }
 
     /**
-     * case: mock SignatureException.
-     */
-    @Test
-    public void testVerifyCredentialCase20() {
-
-        new MockUp<DataToolUtils>() {
-            @Mock
-            public Sign.SignatureData simpleSignatureDeserialization(
-                byte[] serializedSignatureData) throws SignatureException {
-                throw new SignatureException();
-            }
-        };
-        ResponseData<Boolean> response = super.verifyCredential(credential);
-        LogUtil.info(logger, "verifyCredential", response);
-
-        Assert.assertEquals(ErrorCode.CREDENTIAL_ERROR.getCode(),
-            response.getErrorCode().intValue());
-        Assert.assertEquals(false, response.getResult());
-    }
-
-    /**
      * case: signature is empty.
      */
     @Test
@@ -455,7 +431,7 @@ public class TestVerifyCredential extends TestBaseService {
         ResponseData<Boolean> response = super.verifyCredential(newCredential);
         LogUtil.info(logger, "verifyCredential", response);
 
-        Assert.assertEquals(ErrorCode.CREDENTIAL_ERROR.getCode(),
+        Assert.assertEquals(ErrorCode.CREDENTIAL_SIGNATURE_BROKEN.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }

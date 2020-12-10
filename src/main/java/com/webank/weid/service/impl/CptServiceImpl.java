@@ -25,13 +25,11 @@ import java.util.Map;
 
 import com.webank.wedpr.selectivedisclosure.CredentialTemplateEntity;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Sign.SignatureData;
+import org.fisco.bcos.sdk.crypto.signature.ECDSASignatureResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.webank.weid.constant.CredentialConstant;
 import com.webank.weid.constant.ErrorCode;
-import com.webank.weid.constant.JsonSchemaConstant;
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.protocol.base.Cpt;
 import com.webank.weid.protocol.base.CptBaseInfo;
@@ -304,7 +302,7 @@ public class CptServiceImpl extends AbstractService implements CptService {
         sb.append(cptPublisher);
         sb.append(WeIdConstant.PIPELINE);
         sb.append(jsonSchema);
-        SignatureData signatureData = DataToolUtils.secp256k1SignToSignature(
+        ECDSASignatureResult signatureData = DataToolUtils.secp256k1SignToSignature(
             sb.toString(), new BigInteger(cptPublisherPrivateKey.getPrivateKey()));
         return DataToolUtils.convertSignatureDataToRsv(signatureData);
     }

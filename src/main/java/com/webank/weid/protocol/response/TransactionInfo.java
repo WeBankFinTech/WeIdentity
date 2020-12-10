@@ -22,7 +22,9 @@ package com.webank.weid.protocol.response;
 import java.math.BigInteger;
 
 import lombok.Data;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.utils.Numeric;
 
 /**
  * The basic transaction information. Caller can further use these information to track the detailed
@@ -56,9 +58,10 @@ public class TransactionInfo {
      */
     public TransactionInfo(TransactionReceipt receipt) {
         if (receipt != null) {
-            this.blockNumber = receipt.getBlockNumber();
+            this.blockNumber = new BigInteger(Numeric.cleanHexPrefix(receipt.getBlockNumber()), 16);
             this.transactionHash = receipt.getTransactionHash();
-            this.transactionIndex = receipt.getTransactionIndex();
+            this.transactionIndex = new BigInteger(
+                Numeric.cleanHexPrefix(receipt.getTransactionIndex()), 16);
         }
     }
 

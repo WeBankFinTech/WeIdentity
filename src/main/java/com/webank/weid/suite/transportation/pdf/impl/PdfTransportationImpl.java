@@ -47,8 +47,7 @@ import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
 import org.apache.pdfbox.pdmodel.interactive.form.PDField;
-import org.fisco.bcos.web3j.crypto.SHA3Digest;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1313,8 +1312,7 @@ public class PdfTransportationImpl
     private String getChecksum(byte[] pdfFileByte) {
 
         //使用web3j中的sha3算法：keccak-256
-        SHA3Digest digestSha3 = new SHA3Digest();
-        byte[] digest = digestSha3.hash(pdfFileByte);
+        byte[] digest = DataToolUtils.sha3(pdfFileByte);
         return Numeric.toHexString(digest);
     }
 

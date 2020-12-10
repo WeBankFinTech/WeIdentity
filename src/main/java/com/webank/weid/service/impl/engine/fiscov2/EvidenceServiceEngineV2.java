@@ -31,12 +31,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.protocol.core.methods.response.BlockTransactionReceipts;
-import org.fisco.bcos.web3j.protocol.core.methods.response.Log;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Bytes32;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Uint256;
+import org.fisco.bcos.sdk.client.protocol.response.BcosTransactionReceiptsDecoder;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
+import org.fisco.bcos.sdk.model.TransactionReceipt.Logs;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +68,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
 
     private static final Logger logger = LoggerFactory.getLogger(EvidenceServiceEngineV2.class);
 
-    private static CacheNode<BlockTransactionReceipts> receiptsNode =
+    private static CacheNode<BcosTransactionReceiptsDecoder> receiptsNode =
         CacheManager.registerCacheNode("SYS_TX_RECEIPTS", 1000 * 3600 * 24L);
 
     private EvidenceContract evidenceContract;
@@ -84,10 +83,10 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
      * @param groupId 群组编号
      */
     public EvidenceServiceEngineV2(Integer groupId) {
-        super(groupId);
         this.groupId = groupId;
         initEvidenceAddress();
-        evidenceContract = getContractService(this.evidenceAddress, EvidenceContract.class);
+        evidenceContract = getContractService(
+            this.evidenceAddress, this.groupId, EvidenceContract.class);
     }
 
     private void initEvidenceAddress() {
@@ -135,6 +134,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -145,7 +145,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     sigList,
                     logList,
                     timestampList
-                ).send();
+                );
 
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceAttributeChangedEventResponse> eventList =
@@ -208,6 +208,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -218,7 +219,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     sigList,
                     logList,
                     timestampList
-                ).sendAsync().get(WeIdConstant.TRANSACTION_RECEIPT_TIMEOUT, TimeUnit.SECONDS);
+                );
 
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceAttributeChangedEventResponse> eventList =
@@ -234,7 +235,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     Object[] hashArray = event.hash.toArray();
                     for (int i = 0; i < CollectionUtils.size(event.hash); i++) {
                         returnedHashs.add(DataToolUtils.convertHashByte32ArrayIntoHashStr(
-                            ((org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32) (hashArray[i]))
+                            ((Bytes32) (hashArray[i]))
                                 .getValue()));
                     }
                 }
@@ -287,6 +288,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -298,7 +300,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     logList,
                     timestampList,
                     customKeyList
-                ).sendAsync().get(WeIdConstant.TRANSACTION_RECEIPT_TIMEOUT, TimeUnit.SECONDS);
+                );
 
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceAttributeChangedEventResponse> eventList =
@@ -315,7 +317,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     Object[] hashArray = event.hash.toArray();
                     for (int i = 0; i < CollectionUtils.size(event.hash); i++) {
                         returnedHashs.add(DataToolUtils.convertHashByte32ArrayIntoHashStr(
-                            ((org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32) (hashArray[i]))
+                            ((Bytes32) (hashArray[i]))
                                 .getValue()));
                     }
                 }
@@ -356,6 +358,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -366,7 +369,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     sigList,
                     logList,
                     timestampList
-                ).send();
+                );
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceAttributeChangedEventResponse> eventList =
                 evidenceContractWriter.getEvidenceAttributeChangedEvents(receipt);
@@ -419,6 +422,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -431,7 +435,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     logList,
                     timestampList,
                     customKeyList
-                ).send();
+                );
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceAttributeChangedEventResponse> eventList =
                 evidenceContractWriter.getEvidenceAttributeChangedEvents(receipt);
@@ -458,7 +462,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
     public ResponseData<String> getHashByCustomKey(String customKey) {
         try {
             String hash = DataToolUtils.convertHashByte32ArrayIntoHashStr(
-                evidenceContract.getHashByExtraKey(customKey).send());
+                evidenceContract.getHashByExtraKey(customKey));
             if (!StringUtils.isEmpty(hash)) {
                 return new ResponseData<>(hash, ErrorCode.SUCCESS);
             }
@@ -483,7 +487,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
         byte[] hashByte = DataToolUtils.convertHashStrIntoHashByte32Array(hash);
         try {
             latestBlockNumber
-                = evidenceContract.getLatestRelatedBlock(hashByte).send().intValue();
+                = evidenceContract.getLatestRelatedBlock(hashByte).intValue();
             if (latestBlockNumber == 0) {
                 return new ResponseData<>(null, ErrorCode.CREDENTIAL_EVIDENCE_NOT_EXIST);
             }
@@ -511,15 +515,15 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
         int previousBlock = startBlockNumber;
         while (previousBlock != 0) {
             int currentBlockNumber = previousBlock;
-            BlockTransactionReceipts blockTransactionReceipts = null;
+            BcosTransactionReceiptsDecoder blockTransactionReceipts = null;
             try {
                 blockTransactionReceipts = receiptsNode.get(String.valueOf(currentBlockNumber));
                 if (blockTransactionReceipts == null) {
-                    blockTransactionReceipts = ((Web3j) weServer.getWeb3j())
-                        .getBlockTransactionReceipts(BigInteger.valueOf(currentBlockNumber)).send();
+                    blockTransactionReceipts = getClient().getBatchReceiptsByBlockNumberAndRange(
+                        BigInteger.valueOf(currentBlockNumber), "0", "-1");
                     // Store big transactions into memory (bigger than 1) to avoid memory explode
                     if (blockTransactionReceipts != null
-                        && blockTransactionReceipts.getBlockTransactionReceipts()
+                        && blockTransactionReceipts.decodeTransactionReceiptsInfo()
                         .getTransactionReceipts().size() > WeIdConstant.RECEIPTS_COUNT_THRESHOLD) {
                         receiptsNode
                             .put(String.valueOf(currentBlockNumber), blockTransactionReceipts);
@@ -536,12 +540,12 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             previousBlock = 0;
             try {
                 List<TransactionReceipt> receipts = blockTransactionReceipts
-                    .getBlockTransactionReceipts().getTransactionReceipts();
+                    .decodeTransactionReceiptsInfo().getTransactionReceipts();
                 for (TransactionReceipt receipt : receipts) {
-                    List<Log> logs = receipt.getLogs();
+                    List<Logs> logs = receipt.getLogs();
                     // A same topic will be calculated only once
                     Set<String> topicSet = new HashSet<>();
-                    for (Log log : logs) {
+                    for (Logs log : logs) {
                         if (topicSet.contains(log.getTopics().get(0))) {
                             continue;
                         } else {
@@ -566,7 +570,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
 
     private ResolveEventLogResult resolveEventLog(
         String hash,
-        Log log,
+        Logs log,
         TransactionReceipt receipt,
         EvidenceInfo evidenceInfo,
         Map<String, List<String>> perSignerRedoLog) {
@@ -800,6 +804,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -811,7 +816,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     logList,
                     timestampList,
                     extraKeyList
-                ).send();
+                );
 
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceAttributeChangedEventResponse> eventList =
@@ -851,7 +856,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
         }
         try {
             String hash = DataToolUtils.convertHashByte32ArrayIntoHashStr(
-                evidenceContract.getHashByExtraKey(extraKey).send());
+                evidenceContract.getHashByExtraKey(extraKey));
             if (StringUtils.isBlank(hash)) {
                 logger.error("[getInfoByCustomKey] extraKey dose not match any hash. ");
                 return new ResponseData<EvidenceInfo>(null,
@@ -891,6 +896,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
             EvidenceContract evidenceContractWriter =
                 reloadContract(
                     this.evidenceAddress,
+                    this.groupId,
                     privateKey,
                     EvidenceContract.class
                 );
@@ -901,7 +907,7 @@ public class EvidenceServiceEngineV2 extends BaseEngine implements EvidenceServi
                     keyList,
                     valueList,
                     timestampList
-                ).send();
+                );
             TransactionInfo info = new TransactionInfo(receipt);
             List<EvidenceExtraAttributeChangedEventResponse> eventList =
                 evidenceContractWriter.getEvidenceExtraAttributeChangedEvents(receipt);
