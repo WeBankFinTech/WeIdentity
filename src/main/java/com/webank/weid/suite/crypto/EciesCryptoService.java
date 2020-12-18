@@ -19,7 +19,6 @@
 
 package com.webank.weid.suite.crypto;
 
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
@@ -28,13 +27,14 @@ import com.webank.wedpr.ecies.NativeInterface;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.exception.EncodeSuiteException;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
+import com.webank.weid.protocol.base.WeIdPublicKey;
 import com.webank.weid.suite.api.crypto.inf.CryptoService;
 import com.webank.weid.util.DataToolUtils;
 
@@ -47,19 +47,8 @@ public class EciesCryptoService implements CryptoService {
         logger.info("begin encrypt by ecies.");
         checkForEncrypt(content, key);
         String data = Numeric.toHexStringNoPrefix(content.getBytes(StandardCharsets.UTF_8));
-        String pubValue = null;
-        if (StringUtils.isNumeric(key)) {
-            //如果为10进制数字
-            BigInteger bigInt = new BigInteger(key);
-            pubValue = Numeric.toHexStringNoPrefixZeroPadded(bigInt, Keys.PUBLIC_KEY_LENGTH_IN_HEX);
-        } else {
-            if (!DataToolUtils.isValidBase64String(key)) {
-                String errorMessage = "input publicKey is not a valid Base64 string.";
-                throw new EncodeSuiteException(ErrorCode.ILLEGAL_INPUT, errorMessage);
-            }
-            pubValue = Numeric.toHexStringNoPrefix(Base64.decodeBase64(key));
-        }
-        EciesResult result =  NativeInterface.eciesEncrypt(pubValue, data); // 加密
+        WeIdPublicKey weIdPublicKey = new WeIdPublicKey(key);
+        EciesResult result =  NativeInterface.eciesEncrypt(weIdPublicKey.toHex(), data); // 加密
         if (result != null) {
             if (StringUtils.isBlank(result.wedprErrorMessage)) {
                 logger.info("encrypt by ecies successfully.");
@@ -88,20 +77,8 @@ public class EciesCryptoService implements CryptoService {
         logger.info("begin decrypt by ecies.");
         checkForDecrypt(content, key);
         String data = Numeric.toHexStringNoPrefix(Base64.decodeBase64(content));
-        String priValue = null;
-        if (StringUtils.isNumeric(key)) {
-            //如果为10进制数字
-            BigInteger bigInt = new BigInteger(key);
-            priValue = Numeric.toHexStringNoPrefixZeroPadded(
-                bigInt, Keys.PRIVATE_KEY_LENGTH_IN_HEX);
-        } else {
-            if (!DataToolUtils.isValidBase64String(key)) {
-                String errorMessage = "input privateKey is not a valid Base64 string.";
-                throw new EncodeSuiteException(ErrorCode.ILLEGAL_INPUT, errorMessage);
-            }
-            priValue = Numeric.toHexStringNoPrefix(Base64.decodeBase64(key));
-        }
-        EciesResult deResult =  NativeInterface.eciesDecrypt(priValue, data);
+        WeIdPrivateKey weIdPrivateKey = new WeIdPrivateKey(key);
+        EciesResult deResult =  NativeInterface.eciesDecrypt(weIdPrivateKey.toHex(), data);
         if (deResult != null) {
             if (StringUtils.isBlank(deResult.wedprErrorMessage)) {
                 logger.info("decrypt by ecies successfully.");

@@ -64,7 +64,7 @@ public class TestSpecificIssuer extends TestBaseService {
 
         // use the correct (SDK) private key to register
         weIdAuthentication.setWeIdPrivateKey(new WeIdPrivateKey());
-        weIdAuthentication.getWeIdPrivateKey().setPrivateKey(privateKey);
+        weIdAuthentication.getWeIdPrivateKey().setPrivateKey(privateKey.getPrivateKey());
         ResponseData<Boolean> response3 = authorityIssuerService
             .addIssuerIntoIssuerType(weIdAuthentication, defaultType, weIdResult.getWeId());
         Assert.assertTrue(response3.getResult());
@@ -97,7 +97,7 @@ public class TestSpecificIssuer extends TestBaseService {
         weIdAuthentication = new WeIdAuthentication();
         weIdAuthentication.setWeId(weIdResult1.getWeId());
         weIdAuthentication.setWeIdPrivateKey(new WeIdPrivateKey());
-        weIdAuthentication.getWeIdPrivateKey().setPrivateKey(privateKey);
+        weIdAuthentication.getWeIdPrivateKey().setPrivateKey(privateKey.getPrivateKey());
         ResponseData<Boolean> response2 = authorityIssuerService
             .addIssuerIntoIssuerType(weIdAuthentication, defaultType, weIdResult1.getWeId());
         Assert.assertTrue(response2.getResult());

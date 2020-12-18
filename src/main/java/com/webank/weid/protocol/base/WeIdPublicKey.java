@@ -19,18 +19,41 @@
 
 package com.webank.weid.protocol.base;
 
-import lombok.Data;
+import lombok.Getter;
 
 /**
  * The base data wrapper to handle WeIdentity DID Public Key info.
  *
  * <p>Created by Junqi Zhang on 18/10/2018.
  */
-@Data
-public class WeIdPublicKey {
+public class WeIdPublicKey extends KeyBase {
 
     /**
      * Required: The public key.
      */
+    @Getter
     private String publicKey;
+
+    public WeIdPublicKey() {
+        super();
+    }
+
+    public WeIdPublicKey(byte[] value) {
+        super.setValue(value);
+        this.publicKey = super.toHex();
+    }
+
+    public WeIdPublicKey(String publicKey) {
+        setPublicKey(publicKey);
+    }
+
+    public void setPublicKey(String publicKey) {
+        super.keyToBytes(publicKey);
+        this.publicKey = super.toHex();
+    }
+    
+    @Override
+    public String toString() {
+        return "WeIdPublicKey(publicKey=" + this.publicKey + ")";
+    }
 }

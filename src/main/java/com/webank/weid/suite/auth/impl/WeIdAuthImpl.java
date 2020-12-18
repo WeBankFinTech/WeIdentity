@@ -19,7 +19,6 @@
 
 package com.webank.weid.suite.auth.impl;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -251,7 +250,7 @@ public class WeIdAuthImpl implements WeIdAuth {
         //双向auth，发起方也需要对对手方的challenge进行签名
         String challenge1 = (String) dataMap.get(ParamKeyConstant.WEID_AUTH_CHALLENGE);
         String signData = DataToolUtils.secp256k1Sign(
-            challenge1, new BigInteger(weIdAuthentication.getWeIdPrivateKey().getPrivateKey()));
+            challenge1, weIdAuthentication.getWeIdPrivateKey());
         RequestVerifyChallengeArgs verifyChallengeArgs = new RequestVerifyChallengeArgs();
         verifyChallengeArgs.setSignData(signData);
         verifyChallengeArgs.setChallenge(Challenge.fromJson(challenge1));

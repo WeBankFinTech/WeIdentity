@@ -50,7 +50,12 @@ public class FiscoConfig {
     private static final Validator validator = new Validator();
     // 配置topic
     public static String topic;
-    
+
+    private static FiscoConfig instance;
+
+    private FiscoConfig() {
+        
+    }
     // Note that all keys are appended with a colon ":" to support regex auto-loading
 
     @NotNull(message = "the bcos.version is undefined")
@@ -209,5 +214,20 @@ public class FiscoConfig {
             && StringUtils.isNotBlank(this.getSpecificIssuerAddress()) 
             && StringUtils.isNotBlank(this.getEvidenceAddress()) 
             && StringUtils.isNotBlank(this.getCptAddress());
+    }
+
+    public int getEncryptType() {
+        return Integer.parseInt(instance.encryptType);
+    }
+
+    public static FiscoConfig getInstance() {
+        if (instance == null) {
+            instance = new FiscoConfig();
+            if (!instance.load()) {
+                logger.error("[BaseService] Failed to load Fisco-BCOS blockchain node information.");
+            }
+            instance.check();
+        }
+        return instance;
     }
 }

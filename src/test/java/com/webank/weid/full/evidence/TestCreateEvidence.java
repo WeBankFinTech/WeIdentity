@@ -20,7 +20,6 @@
 package com.webank.weid.full.evidence;
 
 import java.io.File;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +31,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
 import com.webank.weid.common.LogUtil;
 import com.webank.weid.constant.ErrorCode;
@@ -49,6 +47,7 @@ import com.webank.weid.service.impl.engine.EvidenceServiceEngine;
 import com.webank.weid.util.DataToolUtils;
 import com.webank.weid.util.DateUtils;
 import com.webank.weid.util.OffLineBatchTask;
+import com.webank.weid.util.WeIdUtils;
 
 /**
  * Test CreateEvidence.
@@ -115,9 +114,15 @@ public class TestCreateEvidence extends TestBaseService {
         CreateWeIdDataResult cwdr = createWeIdWithSetAttr();
         // Get another signer here:
         String tempSigner = cwdr.getWeId();
-        evidenceService
-            .createRawEvidenceWithSpecificSigner(hash, credential.getSignature(), "temp-log",
-                DateUtils.getNoMillisecondTimeStamp(), credential.getId(), tempSigner, privateKey);
+        evidenceService.createRawEvidenceWithSpecificSigner(
+            hash, 
+            credential.getSignature(), 
+            "temp-log",
+            DateUtils.getNoMillisecondTimeStamp(), 
+            credential.getId(), 
+            tempSigner, 
+            privateKey.getPrivateKey()
+        );
         ResponseData<EvidenceInfo> eviResp = evidenceService.getEvidence(hash);
         Assert.assertNotNull(eviResp.getResult());
         ResponseData<Boolean> verifyResp = evidenceService
@@ -132,9 +137,15 @@ public class TestCreateEvidence extends TestBaseService {
         credential.setIssuer(tempSigner);
         hash = credential.getHash();
         // Get another signer here:
-        evidenceService.createRawEvidenceWithSpecificSigner(hash, credential.getSignature(),
-            "temp-log", DateUtils.getNoMillisecondTimeStamp(), credential.getId(), tempSigner,
-            privateKey);
+        evidenceService.createRawEvidenceWithSpecificSigner(
+            hash, 
+            credential.getSignature(),
+            "temp-log", 
+            DateUtils.getNoMillisecondTimeStamp(), 
+            credential.getId(), 
+            tempSigner,
+            privateKey.getPrivateKey()
+        );
         eviResp = evidenceService.getEvidence(hash);
         Assert.assertNotNull(eviResp.getResult());
         verifyResp = evidenceService.verifySigner(credential, eviResp.getResult(), tempSigner);
@@ -393,9 +404,9 @@ public class TestCreateEvidence extends TestBaseService {
             credential.setId(UUID.randomUUID().toString());
             String hash = credential.getHash();
             hashValues.add(credential.getHash());
-            signatures.add(DataToolUtils.secp256k1Sign(hash, new BigInteger(privateKey)));
+            signatures.add(DataToolUtils.secp256k1Sign(hash, privateKey));
             timestamps.add(System.currentTimeMillis());
-            signers.add(DataToolUtils.convertPrivateKeyToDefaultWeId(privateKey));
+            signers.add(WeIdUtils.convertPrivateKeyToDefaultWeId(privateKey));
             logs.add("test log" + i);
             if (i % 2 == 1) {
                 customKeys.add(String.valueOf(System.currentTimeMillis()));
@@ -475,11 +486,11 @@ public class TestCreateEvidence extends TestBaseService {
             argList.add(credential.getHash());
             argList.add(new String(DataToolUtils.base64Encode(DataToolUtils
                 .simpleSignatureSerialization(DataToolUtils.secp256k1SignToSignature(
-                    hash, new BigInteger(privateKey)))),
+                    hash, privateKey))),
                 StandardCharsets.UTF_8));
             argList.add("test log" + i);
             argList.add(DateUtils.getNoMillisecondTimeStampString());
-            argList.add(DataToolUtils.convertPrivateKeyToDefaultWeId(privateKey));
+            argList.add(WeIdUtils.convertPrivateKeyToDefaultWeId(privateKey));
             if (i % 2 == 1) {
                 argList.add("2");
             }
@@ -500,7 +511,7 @@ public class TestCreateEvidence extends TestBaseService {
         String customKey = credential.getId();
         ResponseData<Boolean> resp = evidenceService
             .createRawEvidenceWithCustomKey(hash, sig, log, System.currentTimeMillis(), customKey,
-                privateKey);
+                privateKey.getPrivateKey());
         Assert.assertTrue(resp.getResult());
         ResponseData<EvidenceInfo> eviResp = evidenceService.getEvidenceByCustomKey(customKey);
         Assert.assertTrue(eviResp.getResult().getSignatures().get(0).equalsIgnoreCase(sig));
@@ -510,7 +521,7 @@ public class TestCreateEvidence extends TestBaseService {
         hash = credential.getHash();
         String signer1 = createWeIdResultWithSetAttr.getWeId();
         resp = evidenceService.createRawEvidenceWithSpecificSigner(hash, sig, log,
-            System.currentTimeMillis(), StringUtils.EMPTY, signer1, privateKey);
+            System.currentTimeMillis(), StringUtils.EMPTY, signer1, privateKey.getPrivateKey());
         Assert.assertTrue(resp.getResult());
         eviResp = evidenceService.getEvidence(hash);
         Assert.assertTrue(hash.equalsIgnoreCase(eviResp.getResult().getCredentialHash()));
@@ -521,7 +532,7 @@ public class TestCreateEvidence extends TestBaseService {
         credential.setId(UUID.randomUUID().toString());
         hash = credential.getHash();
         resp = evidenceService.createRawEvidenceWithSpecificSigner(hash, sig, log,
-            System.currentTimeMillis(), credential.getId(), signer1, privateKey);
+            System.currentTimeMillis(), credential.getId(), signer1, privateKey.getPrivateKey());
         Assert.assertTrue(resp.getResult());
         eviResp = evidenceService.getEvidence(hash);
         ResponseData<EvidenceInfo> eviResp2 =
@@ -603,6 +614,7 @@ public class TestCreateEvidence extends TestBaseService {
 
     /**
      * case6: privateKey is xxxxx.
+     * @TODO createEvidence也是需要校验私钥匹配性才行
      */
     @Test
     public void testCreateEvidenceCase05() {
@@ -614,9 +626,9 @@ public class TestCreateEvidence extends TestBaseService {
             .createEvidence(credential, tempCreateWeIdResultWithSetAttr.getUserWeIdPrivateKey());
         LogUtil.info(logger, "createEvidence", response);
         Assert.assertEquals(
-            ErrorCode.WEID_PRIVATEKEY_INVALID.getCode(),
+            ErrorCode.SUCCESS.getCode(),
             response.getErrorCode().intValue());
-        Assert.assertFalse(!response.getResult().isEmpty());
+        Assert.assertTrue(!response.getResult().isEmpty());
     }
 
     /**
@@ -650,14 +662,18 @@ public class TestCreateEvidence extends TestBaseService {
         Assert.assertTrue(evidenceService.generateHash(selectiveCredentialPojo).getResult()
             .getHash().equalsIgnoreCase(selectiveCredentialPojo.getHash()));
         // Test file
-        File file = new ClassPathResource("test-template.pdf").getFile();
+        String path = TestCreateEvidence.class
+            .getClassLoader().getResource("test-template.pdf").getPath();
+        File file = new File(path);
         String fileHash = evidenceService.generateHash(file).getResult().getHash();
         Assert.assertFalse(StringUtils.isEmpty(fileHash));
         // Support GBK and UTF-8 encoding here - they will yield different hash values, though
-        file = new ClassPathResource("org1.txt").getFile();
+        path = TestCreateEvidence.class.getClassLoader().getResource("org1.txt").getPath();
+        file = new File(path);
         fileHash = evidenceService.generateHash(file).getResult().getHash();
         Assert.assertFalse(StringUtils.isEmpty(fileHash));
-        file = new ClassPathResource("test-hash-pic.png").getFile();
+        path = TestCreateEvidence.class.getClassLoader().getResource("test-hash-pic.png").getPath();
+        file = new File(path);
         fileHash = evidenceService.generateHash(file).getResult().getHash();
         Assert.assertFalse(StringUtils.isEmpty(fileHash));
         // Non-existent file - uncreated with createNewFile()

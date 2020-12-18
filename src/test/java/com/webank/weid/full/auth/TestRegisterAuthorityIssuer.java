@@ -717,6 +717,7 @@ public class TestRegisterAuthorityIssuer extends TestBaseService {
 
     /**
      * case: privateKey is invalid.
+     * TODO RegisterAuthorityIssuerArgs里面最好放WeIdAuthentication
      */
     @Test
     public void testRegisterAuthorityIssuer_invalidPrikey() {
@@ -729,7 +730,7 @@ public class TestRegisterAuthorityIssuer extends TestBaseService {
             authorityIssuerService.registerAuthorityIssuer(registerAuthorityIssuerArgs);
         LogUtil.info(logger, "registerAuthorityIssuer", response);
 
-        Assert.assertEquals(ErrorCode.AUTHORITY_ISSUER_ERROR.getCode(),
+        Assert.assertEquals(ErrorCode.AUTHORITY_ISSUER_CONTRACT_ERROR_NAME_ALREADY_EXISTS.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }

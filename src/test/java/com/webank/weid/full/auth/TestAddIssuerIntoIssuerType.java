@@ -42,7 +42,7 @@ public class TestAddIssuerIntoIssuerType extends TestBaseService {
     public void testAddIssuerIntoIssuerType_repeatFail() {
         WeIdAuthentication weIdAuthentication =
             TestBaseUtil.buildWeIdAuthentication(createWeId);
-        weIdAuthentication.setWeIdPrivateKey(new WeIdPrivateKey(privateKey));
+        weIdAuthentication.setWeIdPrivateKey(privateKey);
         CreateWeIdDataResult weId = super.createWeId();
 
         ResponseData<Boolean> response = authorityIssuerService
@@ -210,7 +210,7 @@ public class TestAddIssuerIntoIssuerType extends TestBaseService {
         WeIdAuthentication weIdAuthentication = TestBaseUtil.buildWeIdAuthentication(createWeId);
         CreateWeIdDataResult weIdDataResult = super.registerAuthorityIssuer();
         authorityIssuerService
-            .recognizeAuthorityIssuer(weIdDataResult.getWeId(), new WeIdPrivateKey(privateKey));
+            .recognizeAuthorityIssuer(weIdDataResult.getWeId(), privateKey);
         weIdAuthentication.setWeIdPrivateKey(weIdDataResult.getUserWeIdPrivateKey());
 
         ResponseData<Boolean> response = authorityIssuerService
@@ -229,7 +229,7 @@ public class TestAddIssuerIntoIssuerType extends TestBaseService {
     public void testAddIssuerIntoIssuerType_PubKeyNull() {
 
         WeIdAuthentication weIdAuthentication = TestBaseUtil.buildWeIdAuthentication(createWeId);
-        weIdAuthentication.setWeIdPrivateKey(new WeIdPrivateKey(privateKey));
+        weIdAuthentication.setWeIdPrivateKey(privateKey);
         weIdAuthentication.setWeIdPublicKeyId(null);
 
         ResponseData<Boolean> response = authorityIssuerService
@@ -252,7 +252,7 @@ public class TestAddIssuerIntoIssuerType extends TestBaseService {
             chars[i] = (char) (i % 127);
         }
         weIdAuthentication.setWeIdPublicKeyId(String.valueOf(chars));
-        weIdAuthentication.setWeIdPrivateKey(new WeIdPrivateKey(privateKey));
+        weIdAuthentication.setWeIdPrivateKey(privateKey);
 
         ResponseData<Boolean> response = authorityIssuerService
             .addIssuerIntoIssuerType(weIdAuthentication, issuerType, super.createWeId().getWeId());

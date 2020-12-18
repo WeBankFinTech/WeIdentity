@@ -19,12 +19,6 @@
 
 package com.webank.weid.full.weid;
 
-import java.security.NoSuchProviderException;
-
-import mockit.Mock;
-import mockit.MockUp;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -73,30 +67,6 @@ public class TestCreateWeId1 extends TestBaseService {
         Assert.assertEquals(ErrorCode.SUCCESS.getCode(), response1.getErrorCode().intValue());
         Assert.assertNotNull(response1.getResult());
         Assert.assertNotEquals(response.getResult().getWeId(), response1.getResult().getWeId());
-    }
-
-    /**
-     * case: Simulation throws an exception when calling the createEcKeyPair method.
-     */
-    @Test
-    public void testCreateWeId_createEcKeyPairErr() {
-
-        new MockUp<Keys>() {
-            @Mock
-            public ECKeyPair createEcKeyPair()
-                throws NoSuchProviderException {
-
-                throw new NoSuchProviderException();
-            }
-        };
-
-        ResponseData<CreateWeIdDataResult> response = weIdService.createWeId();
-        LogUtil.info(logger, "createWeId", response);
-
-
-        Assert.assertEquals(ErrorCode.WEID_KEYPAIR_CREATE_FAILED.getCode(),
-            response.getErrorCode().intValue());
-        Assert.assertNull(response.getResult());
     }
 
 }

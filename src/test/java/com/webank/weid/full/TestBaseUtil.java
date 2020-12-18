@@ -26,9 +26,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +34,7 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jackson.JsonLoader;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +56,7 @@ import com.webank.weid.protocol.request.RegisterAuthorityIssuerArgs;
 import com.webank.weid.protocol.request.RemoveAuthorityIssuerArgs;
 import com.webank.weid.protocol.request.ServiceArgs;
 import com.webank.weid.protocol.response.CreateWeIdDataResult;
+import com.webank.weid.suite.api.crypto.params.KeyGenerator;
 import com.webank.weid.util.DataToolUtils;
 
 /**
@@ -525,7 +522,7 @@ public class TestBaseUtil {
      */
     public static RegisterAuthorityIssuerArgs buildRegisterAuthorityIssuerArgs(
         CreateWeIdDataResult createWeId,
-        String privateKey) {
+        WeIdPrivateKey privateKey) {
 
         AuthorityIssuer authorityIssuer = new AuthorityIssuer(
             createWeId.getWeId(),
@@ -538,7 +535,7 @@ public class TestBaseUtil {
         RegisterAuthorityIssuerArgs registerAuthorityIssuerArgs = new RegisterAuthorityIssuerArgs();
         registerAuthorityIssuerArgs.setAuthorityIssuer(authorityIssuer);
         registerAuthorityIssuerArgs.setWeIdPrivateKey(new WeIdPrivateKey());
-        registerAuthorityIssuerArgs.getWeIdPrivateKey().setPrivateKey(privateKey);
+        registerAuthorityIssuerArgs.getWeIdPrivateKey().setPrivateKey(privateKey.getPrivateKey());
 
         return registerAuthorityIssuerArgs;
     }
@@ -551,13 +548,8 @@ public class TestBaseUtil {
     public static CreateWeIdArgs buildCreateWeIdArgs() {
         CreateWeIdArgs args = new CreateWeIdArgs();
         PasswordKey passwordKey = createEcKeyPair();
-        args.setPublicKey(passwordKey.getPublicKey());
-
-        WeIdPrivateKey weIdPrivateKey = new WeIdPrivateKey();
-        weIdPrivateKey.setPrivateKey(passwordKey.getPrivateKey());
-
-        args.setWeIdPrivateKey(weIdPrivateKey);
-
+        args.setPublicKey(passwordKey.getPublicKey().getPublicKey());
+        args.setWeIdPrivateKey(passwordKey.getPrivateKey());
         return args;
     }
 
@@ -612,12 +604,12 @@ public class TestBaseUtil {
      */
     public static RemoveAuthorityIssuerArgs buildRemoveAuthorityIssuerArgs(
         CreateWeIdDataResult createWeId,
-        String privateKey) {
+        WeIdPrivateKey privateKey) {
 
         RemoveAuthorityIssuerArgs removeAuthorityIssuerArgs = new RemoveAuthorityIssuerArgs();
         removeAuthorityIssuerArgs.setWeId(createWeId.getWeId());
         removeAuthorityIssuerArgs.setWeIdPrivateKey(new WeIdPrivateKey());
-        removeAuthorityIssuerArgs.getWeIdPrivateKey().setPrivateKey(privateKey);
+        removeAuthorityIssuerArgs.getWeIdPrivateKey().setPrivateKey(privateKey.getPrivateKey());
 
         return removeAuthorityIssuerArgs;
     }
@@ -630,20 +622,10 @@ public class TestBaseUtil {
     public static PasswordKey createEcKeyPair() {
 
         PasswordKey passwordKey = new PasswordKey();
-        try {
-            ECKeyPair keyPair = Keys.createEcKeyPair();
-            String publicKey = String.valueOf(keyPair.getPublicKey());
-            String privateKey = String.valueOf(keyPair.getPrivateKey());
-            passwordKey.setPrivateKey(privateKey);
-            passwordKey.setPublicKey(publicKey);
-            LogUtil.info(logger, "createEcKeyPair", passwordKey);
-        } catch (InvalidAlgorithmParameterException e) {
-            logger.error("createEcKeyPair error:", e);
-        } catch (NoSuchAlgorithmException e) {
-            logger.error("createEcKeyPair error:", e);
-        } catch (NoSuchProviderException e) {
-            logger.error("createEcKeyPair error:", e);
-        }
+        CryptoKeyPair keyPair = KeyGenerator.createKeyPair();
+        passwordKey.setPrivateKey(keyPair.getHexPrivateKey());
+        passwordKey.setPublicKey(keyPair.getHexPublicKey());
+        LogUtil.info(logger, "createEcKeyPair", passwordKey);
         return passwordKey;
     }
 

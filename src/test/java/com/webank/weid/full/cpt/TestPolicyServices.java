@@ -24,8 +24,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.webank.weid.full.TestBaseService;
 import com.webank.weid.protocol.base.ClaimPolicy;
@@ -42,8 +40,6 @@ import com.webank.weid.util.DataToolUtils;
  */
 
 public class TestPolicyServices extends TestBaseService {
-
-    private static final Logger logger = LoggerFactory.getLogger(TestQueryCpt.class);
 
     @Override
     public synchronized void testInit() {

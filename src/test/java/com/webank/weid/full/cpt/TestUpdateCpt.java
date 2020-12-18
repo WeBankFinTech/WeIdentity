@@ -36,7 +36,6 @@ import com.webank.weid.full.TestBaseService;
 import com.webank.weid.full.TestBaseUtil;
 import com.webank.weid.protocol.base.Cpt;
 import com.webank.weid.protocol.base.CptBaseInfo;
-import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.CptMapArgs;
 import com.webank.weid.protocol.request.CptStringArgs;
 import com.webank.weid.protocol.response.CreateWeIdDataResult;
@@ -155,8 +154,7 @@ public class TestUpdateCpt extends TestBaseService {
     public void testUpdateCpt_noAuthIssuerUpdateAuthCptFail() {
 
         CreateWeIdDataResult createWeId = super.registerAuthorityIssuer();
-        authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(),
-            new WeIdPrivateKey(privateKey));
+        authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(), privateKey);
         CptMapArgs cptMapArgs = TestBaseUtil.buildCptArgs(createWeId);
         CptBaseInfo cptBaseInfo = cptService.registerCpt(cptMapArgs).getResult();
         Assert.assertTrue(cptBaseInfo.getCptId() < 2000000);
@@ -419,8 +417,8 @@ public class TestUpdateCpt extends TestBaseService {
 
         CptMapArgs cptMapArgs =
             TestBaseUtil.buildCptArgs(createWeIdResultWithSetAttr);
-        cptMapArgs.getWeIdAuthentication().getWeIdPrivateKey()
-            .setPrivateKey(TestBaseUtil.createEcKeyPair().getPrivateKey());
+        cptMapArgs.getWeIdAuthentication()
+            .setWeIdPrivateKey(TestBaseUtil.createEcKeyPair().getPrivateKey());
 
         ResponseData<CptBaseInfo> response = cptService.updateCpt(
             cptMapArgs,
@@ -440,7 +438,7 @@ public class TestUpdateCpt extends TestBaseService {
 
         CptMapArgs cptMapArgs =
             TestBaseUtil.buildCptArgs(createWeIdResultWithSetAttr);
-        cptMapArgs.getWeIdAuthentication().getWeIdPrivateKey().setPrivateKey(privateKey);
+        cptMapArgs.getWeIdAuthentication().setWeIdPrivateKey(privateKey);
 
         ResponseData<CptBaseInfo> response = cptService.updateCpt(
             cptMapArgs,
@@ -528,8 +526,7 @@ public class TestUpdateCpt extends TestBaseService {
             TestBaseUtil.buildCptArgs(createWeIdResultWithSetAttr);
         cptMapArgs.getWeIdAuthentication().setWeId(weId);
         cptMapArgs.getWeIdAuthentication()
-            .getWeIdPrivateKey()
-            .setPrivateKey(passwordKey.getPrivateKey());
+            .setWeIdPrivateKey(passwordKey.getPrivateKey());
 
         ResponseData<CptBaseInfo> response = cptService.updateCpt(
             cptMapArgs,

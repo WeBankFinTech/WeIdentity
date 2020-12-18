@@ -31,10 +31,6 @@ public abstract class AbstractService extends BaseService {
     public AbstractService() {
         super();
     }
-    
-    public AbstractService(Integer groupId) {
-        super(groupId);
-    }
 
     protected void reloadContract() {
         reloadAddress();

@@ -29,7 +29,6 @@ import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.full.TestBaseService;
 import com.webank.weid.full.TestBaseUtil;
 import com.webank.weid.protocol.base.AuthorityIssuer;
-import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.RegisterAuthorityIssuerArgs;
 import com.webank.weid.protocol.request.RemoveAuthorityIssuerArgs;
 import com.webank.weid.protocol.response.CreateWeIdDataResult;
@@ -199,9 +198,7 @@ public class TestQueryAuthorityIssuerInfo extends TestBaseService {
         authorityIssuer.setAccValue("0");
         RegisterAuthorityIssuerArgs registerAuthorityIssuerArgs = new RegisterAuthorityIssuerArgs();
         registerAuthorityIssuerArgs.setAuthorityIssuer(authorityIssuer);
-        WeIdPrivateKey weIdPrivateKey = new WeIdPrivateKey();
-        weIdPrivateKey.setPrivateKey(privateKey);
-        registerAuthorityIssuerArgs.setWeIdPrivateKey(weIdPrivateKey);
+        registerAuthorityIssuerArgs.setWeIdPrivateKey(privateKey);
         registerAuthorityIssuerArgs.getAuthorityIssuer()
             .setCreated(DateUtils.getNoMillisecondTimeStamp() + 1000000);
 

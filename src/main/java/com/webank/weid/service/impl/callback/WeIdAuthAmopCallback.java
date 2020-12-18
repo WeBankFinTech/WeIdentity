@@ -19,7 +19,6 @@
 
 package com.webank.weid.service.impl.callback;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,8 +75,7 @@ public class WeIdAuthAmopCallback extends AmopCallback {
         Map<String, Object> dataMap = new HashMap<String, Object>();
         Challenge challenge = args.getChallenge();
         String rawData = challenge.toJson();
-        String privateKey = weIdAuth.getWeIdPrivateKey().getPrivateKey();
-        String challengeSign = DataToolUtils.secp256k1Sign(rawData, new BigInteger(privateKey));
+        String challengeSign = DataToolUtils.secp256k1Sign(rawData, weIdAuth.getWeIdPrivateKey());
         dataMap.put(ParamKeyConstant.WEID_AUTH_SIGN_DATA, challengeSign);
 
         ResponseData<WeIdDocument> weIdDocResp = weIdService.getWeIdDocument(fromWeId);

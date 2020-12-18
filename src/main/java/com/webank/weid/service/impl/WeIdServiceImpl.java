@@ -25,8 +25,7 @@ import java.util.List;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +46,7 @@ import com.webank.weid.protocol.request.ServiceArgs;
 import com.webank.weid.protocol.response.CreateWeIdDataResult;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.rpc.WeIdService;
+import com.webank.weid.suite.api.crypto.params.KeyGenerator;
 import com.webank.weid.util.DataToolUtils;
 import com.webank.weid.util.WeIdUtils;
 
@@ -71,27 +71,16 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
     public ResponseData<CreateWeIdDataResult> createWeId() {
 
         CreateWeIdDataResult result = new CreateWeIdDataResult();
-        ECKeyPair keyPair = null;
-
-        try {
-            keyPair = Keys.createEcKeyPair();
-        } catch (Exception e) {
-            logger.error("Create weId failed.", e);
-            return new ResponseData<>(null, ErrorCode.WEID_KEYPAIR_CREATE_FAILED);
-        }
-
-        String publicKey = String.valueOf(keyPair.getPublicKey());
-        String privateKey = String.valueOf(keyPair.getPrivateKey());
-        WeIdPublicKey userWeIdPublicKey = new WeIdPublicKey();
-        userWeIdPublicKey.setPublicKey(publicKey);
+        CryptoKeyPair keyPair = KeyGenerator.createKeyPair();
+        WeIdPublicKey userWeIdPublicKey = new WeIdPublicKey(keyPair.getHexPublicKey());
         result.setUserWeIdPublicKey(userWeIdPublicKey);
-        WeIdPrivateKey userWeIdPrivateKey = new WeIdPrivateKey();
-        userWeIdPrivateKey.setPrivateKey(privateKey);
+        WeIdPrivateKey userWeIdPrivateKey = new WeIdPrivateKey(keyPair.getHexPrivateKey());
         result.setUserWeIdPrivateKey(userWeIdPrivateKey);
-        String weId = WeIdUtils.convertPublicKeyToWeId(publicKey);
+        String weId = WeIdUtils.convertPublicKeyToWeId(userWeIdPublicKey);
         result.setWeId(weId);
 
-        ResponseData<Boolean> innerResp = processCreateWeId(weId, publicKey, privateKey, false);
+        ResponseData<Boolean> innerResp = processCreateWeId(
+            weId, userWeIdPublicKey, userWeIdPrivateKey, false);
         if (innerResp.getErrorCode() != ErrorCode.SUCCESS.getCode()) {
             logger.error(
                 "[createWeId] Create weId failed. error message is :{}",
@@ -118,13 +107,12 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             logger.error("[createWeId]: input parameter createWeIdArgs is null.");
             return new ResponseData<>(StringUtils.EMPTY, ErrorCode.ILLEGAL_INPUT);
         }
-        if (!WeIdUtils.isPrivateKeyValid(createWeIdArgs.getWeIdPrivateKey()) || !WeIdUtils
-            .isPrivateKeyLengthValid(createWeIdArgs.getWeIdPrivateKey().getPrivateKey())) {
+        if (!WeIdUtils.isPrivateKeyValid(createWeIdArgs.getWeIdPrivateKey())) {
             return new ResponseData<>(StringUtils.EMPTY, ErrorCode.WEID_PRIVATEKEY_INVALID);
         }
-        String privateKey = createWeIdArgs.getWeIdPrivateKey().getPrivateKey();
-        String publicKey = createWeIdArgs.getPublicKey();
-        if (StringUtils.isNotBlank(publicKey)) {
+        WeIdPrivateKey privateKey = createWeIdArgs.getWeIdPrivateKey();
+        WeIdPublicKey publicKey = new WeIdPublicKey(createWeIdArgs.getPublicKey());
+        if (StringUtils.isNotBlank(publicKey.getPublicKey())) {
             if (!WeIdUtils.isKeypairMatch(privateKey, publicKey)) {
                 return new ResponseData<>(
                     StringUtils.EMPTY,
@@ -237,9 +225,9 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             return new ResponseData<>(false, ErrorCode.WEID_PRIVATEKEY_INVALID);
         }
 
+        WeIdPublicKey weIdPublicKey = new WeIdPublicKey(publicKeyArgs.getPublicKey());
         // TODO check this weid document that this pubkey MUST exist first
-        String removedPubKeyToWeId = WeIdUtils
-            .convertPublicKeyToWeId(publicKeyArgs.getPublicKey());
+        String removedPubKeyToWeId = WeIdUtils.convertPublicKeyToWeId(weIdPublicKey);
         if (removedPubKeyToWeId.equalsIgnoreCase(weId)) {
             logger.error("Cannot remove the owning public key of this WeID: {}", weId);
             return new ResponseData<>(false,
@@ -254,7 +242,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
         List<PublicKeyProperty> publicKeys = responseData.getResult().getPublicKey();
         for (PublicKeyProperty pk : publicKeys) {
             // 这一段代码目前不会被执行到，是为了未来支持WeID authorization引入的功能
-            if (pk.getPublicKey().equalsIgnoreCase(publicKeyArgs.getPublicKey())) {
+            if (pk.getPublicKey().equalsIgnoreCase(weIdPublicKey.toHex())) {
                 if (publicKeys.size() == 1) {
                     logger.error("Cannot remove the last public key of this WeID: {}", weId);
                     return new ResponseData<>(false,
@@ -265,7 +253,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
 
         // Add correct tag by externally call revokeAuthentication once
         AuthenticationArgs authenticationArgs = new AuthenticationArgs();
-        authenticationArgs.setPublicKey(publicKeyArgs.getPublicKey());
+        authenticationArgs.setPublicKey(weIdPublicKey.toHex());
         authenticationArgs.setOwner(publicKeyArgs.getOwner());
         ResponseData<Boolean> removeAuthResp = this.revokeAuthentication(
             weId, authenticationArgs, privateKey);
@@ -296,9 +284,8 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                     .append("/")
                     .append("base64")
                     .toString();
-            String publicKey = publicKeyArgs.getPublicKey();
             String attrValue = new StringBuffer()
-                .append(publicKey)
+                .append(weIdPublicKey.toBase64())
                 .append(WeIdConstant.REMOVED_PUBKEY_TAG).append(WeIdConstant.SEPARATOR)
                 .append(owner)
                 .toString();
@@ -306,7 +293,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                 weAddress,
                 attributeKey,
                 attrValue,
-                privateKey.getPrivateKey(),
+                privateKey,
                 false);
         } catch (PrivateKeyIllegalException e) {
             logger.error("[removePublicKey] set PublicKey failed because privateKey is illegal. ",
@@ -366,10 +353,10 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                     ErrorCode.WEID_INVALID);
             }
         }
-        String pubKey = publicKeyArgs.getPublicKey();
+        WeIdPublicKey pubKey = new WeIdPublicKey(publicKeyArgs.getPublicKey());
         int currentPubKeyId = weIdDocResp.getResult().getPublicKey().size();
         for (PublicKeyProperty pkp : weIdDocResp.getResult().getPublicKey()) {
-            if (pkp.getPublicKey().equalsIgnoreCase(pubKey)) {
+            if (pkp.getPublicKey().equalsIgnoreCase(pubKey.toHex())) {
                 if (pkp.getRevoked()) {
                     currentPubKeyId = Integer
                         .valueOf(pkp.getId().substring(pkp.getId().length() - 1));
@@ -386,7 +373,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             weAddress,
             owner,
             pubKey,
-            privateKey.getPrivateKey(),
+            privateKey,
             false);
         if (!processResp.getResult()) {
             return new ResponseData<>(WeIdConstant.ADD_PUBKEY_FAILURE_CODE,
@@ -421,7 +408,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
         String serviceType = serviceArgs.getType();
         String serviceEndpoint = serviceArgs.getServiceEndpoint();
         return processSetService(
-            privateKey.getPrivateKey(),
+            privateKey,
             weId,
             serviceType,
             serviceEndpoint,
@@ -467,16 +454,16 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
         }
         return processSetAuthentication(
             authenticationArgs.getOwner(),
-            authenticationArgs.getPublicKey(),
-            privateKey.getPrivateKey(),
+            new WeIdPublicKey(authenticationArgs.getPublicKey()),
+            privateKey,
             weId,
             false);
     }
 
     private ResponseData<Boolean> processSetAuthentication(
         String owner,
-        String publicKey,
-        String privateKey,
+        WeIdPublicKey publicKey,
+        WeIdPrivateKey privateKey,
         String weId,
         boolean isDelegate) {
         if (WeIdUtils.isWeIdValid(weId)) {
@@ -499,7 +486,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             }
             try {
                 String attrValue = new StringBuffer()
-                    .append(publicKey)
+                    .append(publicKey.toBase64())
                     .append(WeIdConstant.SEPARATOR)
                     .append(owner)
                     .toString();
@@ -565,7 +552,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             }
             try {
                 String attrValue = new StringBuffer()
-                    .append(authenticationArgs.getPublicKey())
+                    .append(new WeIdPublicKey(authenticationArgs.getPublicKey()).toBase64())
                     .append(WeIdConstant.REMOVED_AUTHENTICATION_TAG)
                     .append(WeIdConstant.SEPARATOR)
                     .append(owner)
@@ -574,7 +561,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                     .setAttribute(weAddress,
                         WeIdConstant.WEID_DOC_AUTHENTICATE_PREFIX,
                         attrValue,
-                        privateKey.getPrivateKey(),
+                        privateKey,
                         false);
             } catch (PrivateKeyIllegalException e) {
                 logger
@@ -609,8 +596,8 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
 
     private ResponseData<Boolean> processCreateWeId(
         String weId,
-        String publicKey,
-        String privateKey,
+        WeIdPublicKey publicKey,
+        WeIdPrivateKey privateKey,
         boolean isDelegate) {
 
         String address = WeIdUtils.convertWeIdToAddress(weId);
@@ -671,9 +658,9 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
         if (!WeIdUtils.isPrivateKeyValid(weIdAuthentication.getWeIdPrivateKey())) {
             return new ResponseData<>(StringUtils.EMPTY, ErrorCode.WEID_PRIVATEKEY_INVALID);
         }
-        String privateKey = weIdAuthentication.getWeIdPrivateKey().getPrivateKey();
-        String pubKey = publicKey.getPublicKey();
-        if (StringUtils.isNotBlank(pubKey) && NumberUtils.isDigits(pubKey)) {
+        WeIdPrivateKey privateKey = weIdAuthentication.getWeIdPrivateKey();
+        WeIdPublicKey pubKey = new WeIdPublicKey(publicKey.getPublicKey());
+        if (StringUtils.isNotBlank(pubKey.getPublicKey())) {
             String weId = WeIdUtils.convertPublicKeyToWeId(pubKey);
             ResponseData<Boolean> isWeIdExistResp = this.isWeIdExist(weId);
             if (isWeIdExistResp.getResult() == null || isWeIdExistResp.getResult()) {
@@ -726,8 +713,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             return new ResponseData<>(WeIdConstant.ADD_PUBKEY_FAILURE_CODE,
                 ErrorCode.WEID_PUBLICKEY_INVALID);
         }
-        if (!WeIdUtils.isPrivateKeyValid(delegateAuth) || !WeIdUtils
-            .isPrivateKeyLengthValid(delegateAuth.getPrivateKey())) {
+        if (!WeIdUtils.isPrivateKeyValid(delegateAuth)) {
             return new ResponseData<>(WeIdConstant.ADD_PUBKEY_FAILURE_CODE,
                 ErrorCode.WEID_PRIVATEKEY_INVALID);
         }
@@ -754,10 +740,10 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                     ErrorCode.WEID_INVALID);
             }
         }
-        String pubKey = publicKeyArgs.getPublicKey();
+        WeIdPublicKey pubKey = new WeIdPublicKey(publicKeyArgs.getPublicKey());
         int currentPubKeyId = weIdDocResp.getResult().getPublicKey().size();
         for (PublicKeyProperty pkp : weIdDocResp.getResult().getPublicKey()) {
-            if (pkp.getPublicKey().equalsIgnoreCase(pubKey)) {
+            if (pkp.getPublicKey().equalsIgnoreCase(pubKey.getPublicKey())) {
                 if (pkp.getRevoked()) {
                     currentPubKeyId = Integer
                         .valueOf(pkp.getId().substring(pkp.getId().length() - 1));
@@ -769,14 +755,13 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                 }
             }
         }
-        String privateKey = delegateAuth.getPrivateKey();
 
         ResponseData<Boolean> processResp = processSetPubKey(
             publicKeyArgs.getType().getTypeName(),
             weAddress,
             owner,
             pubKey,
-            privateKey,
+            delegateAuth,
             true);
         if (!processResp.getResult()) {
             return new ResponseData<>(WeIdConstant.ADD_PUBKEY_FAILURE_CODE,
@@ -790,8 +775,8 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
         String type,
         String weAddress,
         String owner,
-        String pubKey,
-        String privateKey,
+        WeIdPublicKey pubKey,
+        WeIdPrivateKey privateKey,
         boolean isDelegate) {
 
         try {
@@ -803,7 +788,9 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
                     .append("/")
                     .append("base64")
                     .toString();
-            String attrValue = new StringBuffer().append(pubKey).append(WeIdConstant.SEPARATOR)
+            String attrValue = new StringBuffer()
+                 .append(pubKey.toBase64())
+                 .append(WeIdConstant.SEPARATOR)
                 .append(owner).toString();
             return weIdServiceEngine.setAttribute(
                 weAddress,
@@ -842,8 +829,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             logger.error("[setService]: input parameter setServiceArgs is illegal.");
             return new ResponseData<>(false, ErrorCode.ILLEGAL_INPUT);
         }
-        if (!WeIdUtils.isPrivateKeyValid(delegateAuth) || !WeIdUtils
-            .isPrivateKeyLengthValid(delegateAuth.getPrivateKey())) {
+        if (!WeIdUtils.isPrivateKeyValid(delegateAuth)) {
             return new ResponseData<>(false, ErrorCode.WEID_PRIVATEKEY_INVALID);
         }
         if (!verifyServiceType(serviceArgs.getType())) {
@@ -853,7 +839,7 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
         String serviceType = serviceArgs.getType();
         String serviceEndpoint = serviceArgs.getServiceEndpoint();
         return processSetService(
-            delegateAuth.getPrivateKey(),
+            delegateAuth,
             weId,
             serviceType,
             serviceEndpoint,
@@ -861,11 +847,12 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
     }
 
     private ResponseData<Boolean> processSetService(
-        String privateKey,
+        WeIdPrivateKey privateKey,
         String weId,
         String serviceType,
         String serviceEndpoint,
-        boolean isDelegate) {
+        boolean isDelegate
+    ) {
         if (WeIdUtils.isWeIdValid(weId)) {
             ResponseData<Boolean> isWeIdExistResp = this.isWeIdExist(weId);
             if (isWeIdExistResp.getResult() == null || !isWeIdExistResp.getResult()) {
@@ -923,14 +910,13 @@ public class WeIdServiceImpl extends AbstractService implements WeIdService {
             || StringUtils.isEmpty(authenticationArgs.getPublicKey())) {
             return new ResponseData<>(false, ErrorCode.ILLEGAL_INPUT);
         }
-        if (!WeIdUtils.isPrivateKeyValid(delegateAuth) || !WeIdUtils
-            .isPrivateKeyLengthValid(delegateAuth.getPrivateKey())) {
+        if (!WeIdUtils.isPrivateKeyValid(delegateAuth)) {
             return new ResponseData<>(false, ErrorCode.WEID_PRIVATEKEY_INVALID);
         }
         return processSetAuthentication(
             authenticationArgs.getOwner(),
-            authenticationArgs.getPublicKey(),
-            delegateAuth.getPrivateKey(),
+            new WeIdPublicKey(authenticationArgs.getPublicKey()),
+            delegateAuth,
             weId,
             true);
     }

@@ -28,15 +28,16 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.ClassUtils;
 
 /**
  * debug class for output object information.
@@ -46,6 +47,26 @@ import org.springframework.util.ClassUtils;
 public class BeanUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BeanUtil.class);
+    private static final Set<Class<?>> primitiveWrapperTypeSet = new HashSet<>();
+
+    static {
+        primitiveWrapperTypeSet.add(Boolean.class);
+        primitiveWrapperTypeSet.add(Byte.class);
+        primitiveWrapperTypeSet.add(Character.class);
+        primitiveWrapperTypeSet.add(Double.class);
+        primitiveWrapperTypeSet.add(Float.class);
+        primitiveWrapperTypeSet.add(Integer.class);
+        primitiveWrapperTypeSet.add(Long.class);
+        primitiveWrapperTypeSet.add(Short.class);
+        primitiveWrapperTypeSet.add(boolean[].class);
+        primitiveWrapperTypeSet.add(byte[].class);
+        primitiveWrapperTypeSet.add(char[].class);
+        primitiveWrapperTypeSet.add(double[].class);
+        primitiveWrapperTypeSet.add(float[].class);
+        primitiveWrapperTypeSet.add(int[].class);
+        primitiveWrapperTypeSet.add(long[].class);
+        primitiveWrapperTypeSet.add(short[].class);
+    }
 
     private static SimpleDateFormat getFormat() {
         return new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -162,14 +183,15 @@ public class BeanUtil {
     }
 
     private static boolean isSimpleValueType(Object obj) {
-        Class clazz = obj.getClass();
         if (obj == null) {
             return false;
         }
+        Class<?> clazz = obj.getClass();
         if (Date.class.isAssignableFrom(clazz)) {
             return false;
         }
-        return (ClassUtils.isPrimitiveOrWrapper(clazz)
+        return (clazz.isPrimitive() 
+            || primitiveWrapperTypeSet.contains(clazz)
             || Enum.class.isAssignableFrom(clazz)
             || CharSequence.class.isAssignableFrom(clazz)
             || Number.class.isAssignableFrom(clazz)

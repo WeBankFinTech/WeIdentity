@@ -19,6 +19,9 @@
 
 package com.webank.weid.common;
 
+import com.webank.weid.protocol.base.WeIdPrivateKey;
+import com.webank.weid.protocol.base.WeIdPublicKey;
+
 /**
  * public and private key object class.
  *
@@ -29,26 +32,26 @@ public class PasswordKey {
     /**
      * the key of privateKey.
      */
-    private String privateKey;
+    private WeIdPrivateKey privateKey;
 
     /**
      * the key of publicKey.
      */
-    private String publicKey;
+    private WeIdPublicKey publicKey;
 
-    public String getPrivateKey() {
+    public WeIdPrivateKey getPrivateKey() {
         return privateKey;
     }
 
     public void setPrivateKey(String privateKey) {
-        this.privateKey = privateKey;
+        this.privateKey = new WeIdPrivateKey(privateKey);
     }
 
-    public String getPublicKey() {
+    public WeIdPublicKey getPublicKey() {
         return publicKey;
     }
 
     public void setPublicKey(String publicKey) {
-        this.publicKey = publicKey;
+        this.publicKey = new WeIdPublicKey(publicKey);
     }
 }

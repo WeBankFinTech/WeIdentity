@@ -32,7 +32,6 @@ import com.webank.weid.constant.WeIdConstant.PublicKeyType;
 import com.webank.weid.full.TestBaseService;
 import com.webank.weid.full.TestBaseUtil;
 import com.webank.weid.protocol.base.WeIdDocument;
-import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.AuthenticationArgs;
 import com.webank.weid.protocol.request.PublicKeyArgs;
 import com.webank.weid.protocol.request.ServiceArgs;
@@ -144,8 +143,7 @@ public class TestGetWeIdDocument extends TestBaseService {
         publicKeyArgs.setPublicKey("abcabac123123");
         publicKeyArgs.setType(PublicKeyType.RSA);
         ResponseData<Integer> resp = weIdService
-            .delegateAddPublicKey(createWeIdResult.getWeId(), publicKeyArgs,
-                new WeIdPrivateKey(privateKey));
+            .delegateAddPublicKey(createWeIdResult.getWeId(), publicKeyArgs, privateKey);
         weIdDoc = weIdService.getWeIdDocument(createWeIdResult.getWeId());
         Assert.assertEquals(weIdDoc.getResult().getPublicKey().size(), 3);
         publicKeyArgs.setPublicKey("cdecde234234");
@@ -193,7 +191,7 @@ public class TestGetWeIdDocument extends TestBaseService {
      */
     @Test
     public void testGetWeIdDocument_setRemoveManyTimes() throws Exception {
-        String key1 = TestBaseUtil.createEcKeyPair().getPublicKey();
+        String key1 = TestBaseUtil.createEcKeyPair().getPublicKey().getPublicKey();
         PublicKeyArgs setPublicKeyArgs = TestBaseUtil.buildSetPublicKeyArgs(createWeIdForGetDoc);
         setPublicKeyArgs.setPublicKey(key1);
         setPublicKeyArgs.setOwner(createWeIdForGetDoc.getWeId());
@@ -203,7 +201,7 @@ public class TestGetWeIdDocument extends TestBaseService {
         PasswordKey pwKey2 = TestBaseUtil.createEcKeyPair();
         AuthenticationArgs setAuthenticationArgs2 = new AuthenticationArgs();
         setAuthenticationArgs2.setOwner(createWeIdForGetDoc.getWeId());
-        setAuthenticationArgs2.setPublicKey(pwKey2.getPublicKey());
+        setAuthenticationArgs2.setPublicKey(pwKey2.getPublicKey().getPublicKey());
         ResponseData<Boolean> key2Resp = weIdService.setAuthentication(
             createWeIdForGetDoc.getWeId(),
             setAuthenticationArgs2,
@@ -212,7 +210,7 @@ public class TestGetWeIdDocument extends TestBaseService {
             "drivingCardServic1",
             "https://weidentity.webank.com/endpoint/8377465");
         PasswordKey pwkey3 = TestBaseUtil.createEcKeyPair();
-        setPublicKeyArgs.setPublicKey(pwkey3.getPublicKey());
+        setPublicKeyArgs.setPublicKey(pwkey3.getPublicKey().getPublicKey());
         ResponseData<Integer> key3Resp = weIdService.addPublicKey(
             createWeIdForGetDoc.getWeId(),
             setPublicKeyArgs,
@@ -245,7 +243,7 @@ public class TestGetWeIdDocument extends TestBaseService {
 
         // test cycle 2: remove another pubkey and authentication
         // remove the pre-created authentication
-        setPublicKeyArgs.setPublicKey(pwKey2.getPublicKey());
+        setPublicKeyArgs.setPublicKey(pwKey2.getPublicKey().getPublicKey());
         ResponseData<Boolean> res4 = weIdService.revokePublicKeyWithAuthentication(
             createWeIdForGetDoc.getWeId(),
             setPublicKeyArgs,

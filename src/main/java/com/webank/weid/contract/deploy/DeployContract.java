@@ -20,14 +20,13 @@
 package com.webank.weid.contract.deploy;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.webank.weid.config.FiscoConfig;
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.contract.deploy.v2.DeployContractV2;
 import com.webank.weid.exception.WeIdBaseException;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 
 /**
  * The Class DeployContract.
@@ -37,21 +36,12 @@ import com.webank.weid.exception.WeIdBaseException;
 public abstract class DeployContract {
 
     /**
-     * log4j.
-     */
-    private static final Logger logger = LoggerFactory.getLogger(DeployContract.class);
-
-    /**
      * The Fisco Config bundle.
      */
     protected static final FiscoConfig fiscoConfig;
 
     static {
-        fiscoConfig = new FiscoConfig();
-        if (!fiscoConfig.load()) {
-            logger.error("[BaseService] Failed to load Fisco-BCOS blockchain node information.");
-            System.exit(1);
-        }
+        fiscoConfig = FiscoConfig.getInstance();
     }
 
     /**
@@ -71,7 +61,7 @@ public abstract class DeployContract {
         }
         fiscoConfig.setChainId(chainId);
         try {
-            deployContract(privateKey, true);
+            deployContract(new WeIdPrivateKey(privateKey), true);
         } catch (WeIdBaseException e) {
             if (e.getErrorCode().getCode() == ErrorCode.CNS_NO_PERMISSION.getCode()) {
                 System.out.println("deploy fail, Maybe your private key is incorrect. Please make "
@@ -83,7 +73,7 @@ public abstract class DeployContract {
         System.exit(0);
     }
     
-    public static void deployContract(String privateKey, boolean instantEnable) {
+    public static void deployContract(WeIdPrivateKey privateKey, boolean instantEnable) {
         if (fiscoConfig.getVersion().startsWith(WeIdConstant.FISCO_BCOS_1_X_VERSION_PREFIX)) {
             throw new WeIdBaseException(ErrorCode.THIS_IS_UNSUPPORTED);
         } else {

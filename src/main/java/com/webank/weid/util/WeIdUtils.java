@@ -23,19 +23,18 @@ import java.math.BigInteger;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
-import org.fisco.bcos.web3j.abi.datatypes.Address;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.crypto.WalletUtils;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.abi.datatypes.Address;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.utils.Numeric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.exception.WeIdBaseException;
 import com.webank.weid.protocol.base.WeIdPrivateKey;
+import com.webank.weid.protocol.base.WeIdPublicKey;
 import com.webank.weid.service.BaseService;
+import com.webank.weid.suite.api.crypto.params.KeyGenerator;
 
 /**
  * The WeIdentity DID Utils.
@@ -96,12 +95,12 @@ public final class WeIdUtils {
     /**
      * Convert a public key to a WeIdentity DID.
      *
-     * @param publicKey the public key
+     * @param userWeIdPublicKey the public key
      * @return WeIdentity DID
      */
-    public static String convertPublicKeyToWeId(String publicKey) {
+    public static String convertPublicKeyToWeId(WeIdPublicKey userWeIdPublicKey) {
         try {
-            String address = Keys.getAddress(new BigInteger(publicKey));
+            String address = KeyGenerator.getAddressByPublicKey(userWeIdPublicKey);
             return buildWeIdByAddress(address);
         } catch (Exception e) {
             logger.error("convert publicKey to weId error.", e);
@@ -131,9 +130,7 @@ public final class WeIdUtils {
      * @return true if the private key is not empty, false otherwise.
      */
     public static boolean isPrivateKeyValid(WeIdPrivateKey weIdPrivateKey) {
-        return (null != weIdPrivateKey && StringUtils.isNotEmpty(weIdPrivateKey.getPrivateKey())
-            && NumberUtils.isDigits(weIdPrivateKey.getPrivateKey())
-            && new BigInteger(weIdPrivateKey.getPrivateKey()).compareTo(BigInteger.ZERO) > 0);
+        return (null != weIdPrivateKey && StringUtils.isNotEmpty(weIdPrivateKey.getPrivateKey()));
     }
 
     /**
@@ -143,10 +140,10 @@ public final class WeIdUtils {
      * @param publicKey the WeIdentity DID publicKey key
      * @return true if the private and publicKey key is match, false otherwise.
      */
-    public static boolean isKeypairMatch(String privateKey, String publicKey) {
+    public static boolean isKeypairMatch(WeIdPrivateKey privateKey, WeIdPublicKey publicKey) {
         try {
-            ECKeyPair keyPair = ECKeyPair.create(new BigInteger(privateKey));
-            return StringUtils.equals(String.valueOf(keyPair.getPublicKey()), publicKey);
+            CryptoKeyPair keyPair = KeyGenerator.createKeyPair(privateKey);
+            return StringUtils.equals(keyPair.getHexPublicKey(), publicKey.getPublicKey());
         } catch (Exception e) {
             return false;
         }
@@ -164,7 +161,9 @@ public final class WeIdUtils {
             return false;
         }
         try {
-            return WalletUtils.isValidAddress(addr);
+            //TODO java-sdk去掉了WalletUtils.isValidAddress, 此处为先将原逻辑迁移出来
+            String addressNoPrefix = Numeric.cleanHexPrefix(addr);
+            return addressNoPrefix.length() == 40;
         } catch (Exception e) {
             return false;
         }
@@ -218,9 +217,8 @@ public final class WeIdUtils {
         boolean isMatch = false;
 
         try {
-            BigInteger publicKey = DataToolUtils
-                .publicKeyFromPrivate(new BigInteger(privateKey.getPrivateKey()));
-            String address1 = "0x" + Keys.getAddress(publicKey);
+            WeIdPublicKey publicKey = KeyGenerator.publicKeyFromPrivate(privateKey);
+            String address1 = KeyGenerator.getAddressByPublicKey(publicKey);
             String address2 = WeIdUtils.convertWeIdToAddress(weId);
             if (address1.equals(address2)) {
                 isMatch = true;
@@ -239,11 +237,8 @@ public final class WeIdUtils {
      * @param privateKey private key
      * @return address
      */
-    public static String getWeIdFromPrivateKey(String privateKey) {
-
-        BigInteger publicKey = DataToolUtils
-            .publicKeyFromPrivate(new BigInteger(privateKey));
-        return convertPublicKeyToWeId(String.valueOf(publicKey));
+    public static String getWeIdFromPrivateKey(WeIdPrivateKey privateKey) {
+        return convertPublicKeyToWeId(KeyGenerator.publicKeyFromPrivate(privateKey));
     }
 
     /**
@@ -266,5 +261,15 @@ public final class WeIdUtils {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    /**
+     * Convert a private key to its default WeID.
+     *
+     * @param privateKey the pass-in privatekey
+     * @return true if yes, false otherwise
+     */
+    public static String convertPrivateKeyToDefaultWeId(WeIdPrivateKey privateKey) {
+        return convertAddressToWeId(KeyGenerator.createKeyPair(privateKey).getAddress());
     }
 }

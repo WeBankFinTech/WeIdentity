@@ -19,8 +19,6 @@
 
 package com.webank.weid.suite.transportation;
 
-import java.math.BigInteger;
-
 import org.apache.commons.lang3.StringUtils;
 
 import com.webank.weid.constant.ErrorCode;
@@ -68,7 +66,7 @@ public abstract class AbstractCodeTransportation extends AbstractJsonTransportat
         args.setClassName(codeData.getClass().getName());
         String signValue = DataToolUtils.secp256k1Sign(
             codeData.getId(), 
-            new BigInteger(weIdAuthentication.getWeIdPrivateKey().getPrivateKey())
+            weIdAuthentication.getWeIdPrivateKey()
         );
         args.setSignValue(signValue);
         return args;

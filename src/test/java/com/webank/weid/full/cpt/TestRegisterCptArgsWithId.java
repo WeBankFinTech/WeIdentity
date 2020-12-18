@@ -38,7 +38,6 @@ import com.webank.weid.full.TestBaseService;
 import com.webank.weid.full.TestBaseUtil;
 import com.webank.weid.protocol.base.CptBaseInfo;
 import com.webank.weid.protocol.base.WeIdAuthentication;
-import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.CptMapArgs;
 import com.webank.weid.protocol.request.CptStringArgs;
 import com.webank.weid.protocol.response.CreateWeIdDataResult;
@@ -66,7 +65,7 @@ public class TestRegisterCptArgsWithId extends TestBaseService {
             createWeId = super.createWeId();
             super.registerAuthorityIssuer(createWeId);
             authorityIssuerService
-                .recognizeAuthorityIssuer(createWeId.getWeId(), new WeIdPrivateKey(privateKey));
+                .recognizeAuthorityIssuer(createWeId.getWeId(), privateKey);
         }
     }
 
@@ -428,7 +427,7 @@ public class TestRegisterCptArgsWithId extends TestBaseService {
         ResponseData<CptBaseInfo> response = cptService.registerCpt(cptMapArgs, cptId);
         LogUtil.info(logger, "registerCpt", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_INVALID.getCode(),
             response.getErrorCode().intValue());
         Assert.assertNull(response.getResult());
     }
@@ -440,8 +439,8 @@ public class TestRegisterCptArgsWithId extends TestBaseService {
     public void testRegisterCptArgsWithId_newPriKey() {
 
         CptMapArgs cptMapArgs = TestBaseUtil.buildCptArgs(createWeId);
-        cptMapArgs.getWeIdAuthentication().getWeIdPrivateKey()
-            .setPrivateKey(TestBaseUtil.createEcKeyPair().getPrivateKey());
+        cptMapArgs.getWeIdAuthentication()
+            .setWeIdPrivateKey(TestBaseUtil.createEcKeyPair().getPrivateKey());
 
         Integer cptId = 50000;
         ResponseData<CptBaseInfo> response = cptService.registerCpt(cptMapArgs, cptId);
@@ -459,7 +458,7 @@ public class TestRegisterCptArgsWithId extends TestBaseService {
     public void testRegisterCptArgsWithId_sdkPriKey() {
 
         CptMapArgs cptMapArgs = TestBaseUtil.buildCptArgs(createWeId);
-        cptMapArgs.getWeIdAuthentication().getWeIdPrivateKey().setPrivateKey(privateKey);
+        cptMapArgs.getWeIdAuthentication().setWeIdPrivateKey(privateKey);
 
         Integer cptId = 50000;
         ResponseData<CptBaseInfo> response = cptService.registerCpt(cptMapArgs, cptId);
@@ -482,8 +481,7 @@ public class TestRegisterCptArgsWithId extends TestBaseService {
         CptMapArgs cptMapArgs = TestBaseUtil.buildCptArgs(createWeId);
         cptMapArgs.getWeIdAuthentication().setWeId(weId);
         cptMapArgs.getWeIdAuthentication()
-            .getWeIdPrivateKey()
-            .setPrivateKey(passwordKey.getPrivateKey());
+            .setWeIdPrivateKey(passwordKey.getPrivateKey());
 
         Integer cptId = 50000;
         ResponseData<CptBaseInfo> response = cptService.registerCpt(cptMapArgs, cptId);

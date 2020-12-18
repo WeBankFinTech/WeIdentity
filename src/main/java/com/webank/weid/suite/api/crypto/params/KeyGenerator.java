@@ -28,9 +28,15 @@ import java.security.SecureRandom;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.utils.Numeric;
+import org.fisco.bcos.sdk.crypto.CryptoSuite;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.crypto.keypair.ECDSAKeyPair;
+import org.fisco.bcos.sdk.crypto.keypair.SM2KeyPair;
+import org.fisco.bcos.sdk.utils.Numeric;
 
+import com.webank.weid.config.FiscoConfig;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
+import com.webank.weid.protocol.base.WeIdPublicKey;
 import com.webank.weid.util.DataToolUtils;
 
 /**
@@ -41,6 +47,8 @@ import com.webank.weid.util.DataToolUtils;
 public class KeyGenerator {
     
     public static final int DEFAULT_KEY_SIZE = 1024;
+    public static final int PUBLIC_KEY_LENGTH_IN_HEX = 128;
+    public static final int PRIVATE_KEY_LENGTH_IN_HEX = 64;
 
     /**
      * 使用UUID作为秘钥.
@@ -88,7 +96,6 @@ public class KeyGenerator {
     
     /**
      * 将WeId生成的10进制密钥转换成可以加解密的Base64密钥.
-     * 该方法根据密钥字节长度自动判断是公钥还私钥
      * @param decimalKey 10进制的数字密钥
      * @return 返回补位后的base64密钥
      */
@@ -97,14 +104,7 @@ public class KeyGenerator {
             return StringUtils.EMPTY;
         }
         BigInteger bigInt = new BigInteger(decimalKey, 10);
-        int keySize = Keys.PUBLIC_KEY_LENGTH_IN_HEX;
-        //公钥字节长度为63, 64, 65
-        //私钥的字节长度32, 33, 30, 31
-        if (bigInt.toByteArray().length < 50) {
-            keySize = Keys.PRIVATE_KEY_LENGTH_IN_HEX;
-        }
-        String hex = Numeric.toHexStringNoPrefixZeroPadded(bigInt, keySize);
-        return Base64.encodeBase64String(Numeric.hexStringToByteArray(hex));
+        return Base64.encodeBase64String(bigInt.toByteArray());
     }
     
     /**
@@ -117,5 +117,44 @@ public class KeyGenerator {
             return StringUtils.EMPTY; 
         }
         return Numeric.toBigInt(Base64.decodeBase64(base64Key)).toString();
+    }
+
+    /**
+     * Generate a new Key-pair.
+     *
+     * @return the ECKeyPair
+     */
+    public static CryptoKeyPair createKeyPair() {
+        return new CryptoSuite(FiscoConfig.getInstance().getEncryptType()).getCryptoKeyPair();
+    }
+
+    /**
+     * 根据私钥构建CryptoKeyPair.
+     * @param privateKey 私钥
+     * @return 返回CryptoKeyPair对象
+     */
+    public static CryptoKeyPair createKeyPair(WeIdPrivateKey privateKey) {
+        return createKeyPair().createKeyPair(privateKey.getPrivateKey());
+    }
+
+    /**
+     * Obtain the PublicKey from given PrivateKey.
+     *
+     * @param privateKey the private key
+     * @return publicKey
+     */
+    public static WeIdPublicKey publicKeyFromPrivate(WeIdPrivateKey privateKey) {
+        return new WeIdPublicKey(createKeyPair(privateKey).getHexPublicKey());
+    }
+
+    public static String getAddressByPublicKey(WeIdPublicKey userWeIdPublicKey) {
+        if (FiscoConfig.getInstance().getEncryptType() 
+            == org.fisco.bcos.sdk.model.CryptoType.ECDSA_TYPE) {
+            return ECDSAKeyPair.getAddressByPublicKey(userWeIdPublicKey.getPublicKey());
+        } else if (FiscoConfig.getInstance().getEncryptType() 
+            == org.fisco.bcos.sdk.model.CryptoType.SM_TYPE) {
+            return SM2KeyPair.getAddressByPublicKey(userWeIdPublicKey.getPublicKey());
+        }
+        return StringUtils.EMPTY;
     }
 }

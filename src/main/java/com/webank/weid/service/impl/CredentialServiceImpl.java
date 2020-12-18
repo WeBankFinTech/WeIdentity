@@ -19,8 +19,6 @@
 
 package com.webank.weid.service.impl;
 
-import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,10 +27,6 @@ import java.util.UUID;
 
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.abi.datatypes.Address;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Keys;
-import org.fisco.bcos.web3j.crypto.Sign;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,7 +124,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
             // Construct Credential Proof
             Map<String, String> credentialProof = CredentialUtils.buildCredentialProof(
                 result,
-                args.getWeIdPrivateKey().getPrivateKey(),
+                args.getWeIdPrivateKey(),
                 disclosureMap);
             result.setProof(credentialProof);
 
@@ -190,10 +184,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
         } else {
             result.setExpirationDate(newExpirationDate);
         }
-        String privateKey = weIdPrivateKey.getPrivateKey();
-        ECKeyPair keyPair = ECKeyPair.create(new BigInteger(privateKey));
-        String keyWeId = WeIdUtils
-            .convertAddressToWeId(new Address(Keys.getAddress(keyPair)).toString());
+        String keyWeId = WeIdUtils.convertPrivateKeyToDefaultWeId(weIdPrivateKey);
         if (!weIdService.isWeIdExist(keyWeId).getResult()) {
             return new ResponseData<>(null, ErrorCode.WEID_DOES_NOT_EXIST);
         }
@@ -218,7 +209,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
         claim.put("credentialList", trimmedCredentialList);
         result.setClaim(claim);
         Map<String, String> credentialProof = CredentialUtils
-            .buildCredentialProof(result, privateKey, null);
+            .buildCredentialProof(result, weIdPrivateKey, null);
         result.setProof(credentialProof);
         return new ResponseData<>(result, ErrorCode.SUCCESS);
     }
@@ -266,7 +257,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
         if (weIdPublicKey == null) {
             return new ResponseData<Boolean>(false, ErrorCode.CREDENTIAL_ISSUER_MISMATCH);
         }
-        return verifyCredentialContent(credentialWrapper, weIdPublicKey.getPublicKey());
+        return verifyCredentialContent(credentialWrapper, weIdPublicKey);
     }
 
     /**
@@ -311,7 +302,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
     }
 
     private ResponseData<Boolean> verifyCredentialContent(CredentialWrapper credentialWrapper,
-        String publicKey) {
+        WeIdPublicKey publicKey) {
         Credential credential = credentialWrapper.getCredential();
         ErrorCode innerResponse = CredentialUtils.isCredentialValid(credential);
         if (ErrorCode.SUCCESS.getCode() != innerResponse.getCode()) {
@@ -372,7 +363,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
     }
 
     private ResponseData<Boolean> verifySingleSignedCredential(CredentialWrapper credentialWrapper,
-        String publicKey) {
+        WeIdPublicKey publicKey) {
         Credential credential = credentialWrapper.getCredential();
         ResponseData<Boolean> responseData = verifyIssuerExistence(credential.getIssuer());
         if (!responseData.getResult()) {
@@ -473,21 +464,14 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
 
     private ResponseData<Boolean> verifySignature(
         CredentialWrapper credentialWrapper,
-        String publicKey) {
+        WeIdPublicKey publicKey) {
 
         try {
             Credential credential = credentialWrapper.getCredential();
             Map<String, Object> disclosureMap = credentialWrapper.getDisclosure();
             String rawData = CredentialUtils
                 .getCredentialThumbprintWithoutSig(credential, disclosureMap);
-            Sign.SignatureData signatureData =
-                DataToolUtils.simpleSignatureDeserialization(
-                    DataToolUtils.base64Decode(
-                        credential.getSignature().getBytes(StandardCharsets.UTF_8)
-                    )
-                );
-
-            if (StringUtils.isEmpty(publicKey)) {
+            if (publicKey == null || StringUtils.isEmpty(publicKey.getPublicKey())) {
                 // Fetch public key from chain
                 String credentialIssuer = credential.getIssuer();
                 ResponseData<WeIdDocument> innerResponseData =
@@ -510,7 +494,7 @@ public class CredentialServiceImpl extends BaseService implements CredentialServ
             } else {
                 boolean result =
                     DataToolUtils.verifySecp256k1Signature(rawData,
-                        credential.getSignature(), new BigInteger(publicKey));
+                        credential.getSignature(), publicKey);
                 if (!result) {
                     return new ResponseData<>(false, ErrorCode.CREDENTIAL_VERIFY_FAIL);
                 }

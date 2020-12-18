@@ -19,10 +19,9 @@
 
 package com.webank.weid.service;
 
-import java.io.IOException;
-
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
+import org.fisco.bcos.sdk.client.Client;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +40,6 @@ import com.webank.weid.protocol.response.AmopResponse;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.rpc.callback.RegistCallBack;
 import com.webank.weid.service.fisco.WeServer;
-import com.webank.weid.service.fisco.WeServerUtils;
 import com.webank.weid.service.impl.base.AmopCommonArgs;
 import com.webank.weid.service.impl.engine.DataBucketServiceEngine;
 import com.webank.weid.service.impl.engine.EngineFactory;
@@ -60,39 +58,22 @@ public abstract class BaseService {
 
     protected static Integer masterGroupId;
 
-    protected WeServer<?, ?, ?> weServer;
+    protected static WeServer weServer;
 
     static {
-        fiscoConfig = new FiscoConfig();
-        if (!fiscoConfig.load()) {
-            logger.error("[BaseService] Failed to load Fisco-BCOS blockchain node information.");
-        }
-        fiscoConfig.check();
+        fiscoConfig = FiscoConfig.getInstance();
         masterGroupId = Integer.parseInt(fiscoConfig.getGroupId());
-    }
-
-    /**
-     * Constructor.
-     */
-    public BaseService() {
-        weServer = getWeServer(masterGroupId);
-    }
-
-    /**
-     * Constructor.
-     * 
-     * @param groupId 群组编号
-     */
-    public BaseService(Integer groupId) {
-        weServer = getWeServer(groupId);
-    }
-
-    private static WeServer<?, ?, ?> getWeServer(Integer groupId) {
-        return WeServer.getInstance(fiscoConfig, groupId);
     }
 
     protected static DataBucketServiceEngine getBucket(CnsType cnsType) {
         return EngineFactory.createDataBucketServiceEngine(cnsType);
+    }
+
+    protected static WeServer getWeServer() {
+        if (weServer == null) {
+            weServer = WeServer.getInstance(fiscoConfig);
+        }
+        return weServer;
     }
 
     /**
@@ -100,8 +81,8 @@ public abstract class BaseService {
      *
      * @return the web3j
      */
-    public static Object getWeb3j() {
-        return getWeb3j(masterGroupId);
+    public static Client getClient() {
+        return getClient(masterGroupId);
     }
 
     /**
@@ -110,48 +91,36 @@ public abstract class BaseService {
      * @param groupId 群组ID
      * @return the web3j
      */
-    public static Object getWeb3j(Integer groupId) {
-        return getWeServer(groupId).getWeb3j();
-    }
-
-    /**
-     * Gets the web3j class.
-     *
-     * @return the web3j
-     */
-    protected Class<?> getWeb3jClass() {
-        return weServer.getWeb3jClass();
+    public static Client getClient(Integer groupId) {
+        return getWeServer().getClient(groupId);
     }
 
     /**
      * get current blockNumber.
      *
      * @return return blockNumber
-     * @throws IOException possible exceptions to sending transactions
      */
-    public static int getBlockNumber() throws IOException {
+    public static int getBlockNumber() {
         return getBlockNumber(masterGroupId);
     }
-    
+
     /**
      * get current blockNumber.
      *
      * @param groupId 群组编号
      * @return return blockNumber
-     * @throws IOException possible exceptions to sending transactions
      */
-    public static int getBlockNumber(Integer groupId) throws IOException {
-        return getWeServer(groupId).getBlockNumber();
+    public static int getBlockNumber(Integer groupId) {
+        return getWeServer().getBlockNumber(groupId);
     }
-    
+
     /**
      * get FISCO-BCOS version.
      *
      * @return return nodeVersion
-     * @throws IOException possible exceptions to sending transactions
      */
-    public static String getVersion() throws IOException {
-        return getWeServer(masterGroupId).getVersion();
+    public static String getVersion() {
+        return getWeServer().getVersion();
     }
 
     /**
@@ -161,7 +130,7 @@ public abstract class BaseService {
      * @return 返回bucket地址
      */
     public static CnsInfo getBucketByCns(CnsType cnsType) {
-        return getWeServer(masterGroupId).getBucketByCns(cnsType);
+        return getWeServer().getBucketByCns(cnsType);
     }
 
     /**
@@ -171,7 +140,7 @@ public abstract class BaseService {
      * @return true表示群组存在，false表示群组不存在
      */
     public static boolean checkGroupId(Integer groupId) {
-        return WeServerUtils.getGroupList().contains(String.valueOf(groupId));
+        return getWeServer().getGroupList().contains(groupId);
     }
     
     /**
@@ -204,7 +173,7 @@ public abstract class BaseService {
      * @return the RegistCallBack
      */
     protected RegistCallBack getPushCallback() {
-        return weServer.getPushCallback();
+        return getWeServer().getPushCallback();
     }
 
     /**
@@ -253,7 +222,7 @@ public abstract class BaseService {
         amopCommonArgs.setMessageId(getSeq());
         logger.info("direct route request, seq : {}, body ：{}", amopCommonArgs.getMessageId(),
             requestBodyStr);
-        AmopResponse response = weServer.sendChannelMessage(amopCommonArgs, timeOut);
+        AmopResponse response = getWeServer().sendChannelMessage(amopCommonArgs, timeOut);
         logger.info("direct route response, seq : {}, errorCode : {}, errorMsg : {}, body : {}",
             response.getMessageId(),
             response.getErrorCode(),
@@ -265,7 +234,6 @@ public abstract class BaseService {
             responseStruct.setErrorCode(ErrorCode.DIRECT_ROUTE_REQUEST_TIMEOUT);
         } else if (0 != response.getErrorCode()) {
             responseStruct.setErrorCode(ErrorCode.DIRECT_ROUTE_MSG_BASE_ERROR);
-            return responseStruct;
         } else {
             responseStruct.setErrorCode(ErrorCode.getTypeByErrorCode(response.getErrorCode()));
         }

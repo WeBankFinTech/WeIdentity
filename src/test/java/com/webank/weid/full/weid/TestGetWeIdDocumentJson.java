@@ -36,7 +36,6 @@ import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.full.TestBaseService;
 import com.webank.weid.full.TestBaseUtil;
 import com.webank.weid.protocol.base.WeIdDocument;
-import com.webank.weid.protocol.request.SetServiceArgs;
 import com.webank.weid.protocol.response.CreateWeIdDataResult;
 import com.webank.weid.protocol.response.ResponseData;
 

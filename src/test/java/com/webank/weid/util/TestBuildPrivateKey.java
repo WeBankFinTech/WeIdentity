@@ -19,8 +19,6 @@
 
 package com.webank.weid.util;
 
-import java.math.BigInteger;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -44,8 +42,7 @@ public class TestBuildPrivateKey {
     @Test
     public void testBuildPrivateKey() {
         PasswordKey passwordKey = TestBaseUtil.resolvePk("org1.txt");
-        BigInteger bigInter1 = new BigInteger(passwordKey.getPrivateKey(), 10);
-        String str1 = bigInter1.toString(16);
+        String str1 = passwordKey.getPrivateKey().getPrivateKey();
         logger.info("private key:{}", str1);
         Assert.assertNotNull(str1);
     }

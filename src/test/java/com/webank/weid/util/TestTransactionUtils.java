@@ -24,12 +24,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.abi.datatypes.StaticArray;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Int256;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.abi.datatypes.StaticArray;
+import org.fisco.bcos.sdk.abi.datatypes.Type;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Bytes32;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Int256;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Before;
 
 import com.webank.weid.full.TestBaseUtil;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.rpc.AuthorityIssuerService;
 import com.webank.weid.rpc.CptService;
 import com.webank.weid.rpc.CredentialPojoService;
@@ -58,7 +59,7 @@ public abstract class BaseTest extends BaseService {
     /**
      * the private key of sdk is a BigInteger,which needs to be used when registering authority.
      */
-    protected String privateKey;
+    protected WeIdPrivateKey privateKey;
     
     static {
         // mock DB
@@ -80,7 +81,7 @@ public abstract class BaseTest extends BaseService {
         credentialPojoService = new CredentialPojoServiceImpl();
         policyService = new PolicyServiceImpl();
 
-        privateKey = TestBaseUtil.readPrivateKeyFromFile("ecdsa_key");
+        privateKey = new WeIdPrivateKey(TestBaseUtil.readPrivateKeyFromFile("ecdsa_key"));
 
         testInit();
     }

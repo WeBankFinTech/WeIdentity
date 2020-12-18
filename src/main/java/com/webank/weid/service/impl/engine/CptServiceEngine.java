@@ -45,6 +45,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * @param cptJsonSchemaNew cpt content
      * @param rsvSignature signature
      * @param privateKey private key
+     * @param dataStorageIndex storage type index
      * @return result
      */
     ResponseData<CptBaseInfo> updateCpt(
@@ -52,7 +53,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
         String address,
         String cptJsonSchemaNew,
         RsvSignature rsvSignature,
-        String privateKey,
+        WeIdPrivateKey privateKey,
         int dataStorageIndex
     );
 
@@ -64,6 +65,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * @param cptJsonSchemaNew cpt content
      * @param rsvSignature signature
      * @param privateKey private key
+     * @param dataStorageIndex storage type index
      * @return result
      */
     ResponseData<CptBaseInfo> registerCpt(
@@ -71,7 +73,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
         String address,
         String cptJsonSchemaNew,
         RsvSignature rsvSignature,
-        String privateKey,
+        WeIdPrivateKey privateKey,
         int dataStorageIndex
     );
 
@@ -82,13 +84,14 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * @param cptJsonSchemaNew cpt content
      * @param rsvSignature signature
      * @param privateKey private key
+     * @param dataStorageIndex storage type index
      * @return result
      */
     ResponseData<CptBaseInfo> registerCpt(
         String address,
         String cptJsonSchemaNew,
         RsvSignature rsvSignature,
-        String privateKey,
+        WeIdPrivateKey privateKey,
         int dataStorageIndex
     );
 
@@ -96,6 +99,7 @@ public interface CptServiceEngine extends ReloadStaticContract {
      * call cpt contract method to query cpt info from blockchain.
      *
      * @param cptId the id of the cpt
+     * @param dataStorageIndex storage type index
      * @return cpt info
      */
     ResponseData<Cpt> queryCpt(int cptId, int dataStorageIndex);
@@ -108,13 +112,18 @@ public interface CptServiceEngine extends ReloadStaticContract {
      */
     ResponseData<CredentialTemplateEntity> queryCredentialTemplate(Integer cptId);
 
-    ResponseData<Integer> putPolicyIntoPresentation(List<Integer> policyIdList,
-        WeIdPrivateKey weIdPrivateKey);
+    ResponseData<Integer> putPolicyIntoPresentation(
+        List<Integer> policyIdList,
+        WeIdPrivateKey weIdPrivateKey
+    );
 
     ResponseData<PresentationPolicyE> getPolicyFromPresentation(Integer presentationId);
 
-    ResponseData<Integer> putPolicyIntoCpt(Integer cptId, List<Integer> policyIdList,
-        WeIdPrivateKey weIdPrivateKey);
+    ResponseData<Integer> putPolicyIntoCpt(
+        Integer cptId, 
+        List<Integer> policyIdList,
+        WeIdPrivateKey weIdPrivateKey
+    );
 
     ResponseData<List<Integer>> getPolicyFromCpt(Integer cptId);
 

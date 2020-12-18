@@ -23,6 +23,8 @@ import java.util.List;
 
 import com.webank.weid.protocol.base.WeIdDocument;
 import com.webank.weid.protocol.base.WeIdPojo;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
+import com.webank.weid.protocol.base.WeIdPublicKey;
 import com.webank.weid.protocol.response.ResponseData;
 
 /**
@@ -44,8 +46,8 @@ public interface WeIdServiceEngine extends ReloadStaticContract {
      */
     ResponseData<Boolean> createWeId(
         String weAddress,
-        String publicKey,
-        String privateKey,
+        WeIdPublicKey publicKey,
+        WeIdPrivateKey privateKey,
         boolean isDelegate
     );
 
@@ -63,7 +65,7 @@ public interface WeIdServiceEngine extends ReloadStaticContract {
         String weAddress,
         String attributeKey,
         String value,
-        String privateKey,
+        WeIdPrivateKey privateKey,
         boolean isDelegate
     );
 

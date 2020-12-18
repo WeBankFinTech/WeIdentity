@@ -155,7 +155,7 @@ public class TestSetAuthentication extends TestBaseService {
             createWeIdResult.getUserWeIdPrivateKey());
         LogUtil.info(logger, "setAuthentication", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_DOES_NOT_EXIST.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }
@@ -190,7 +190,7 @@ public class TestSetAuthentication extends TestBaseService {
             TestBaseUtil.buildSetAuthenticationArgs(createWeIdResult);
         PasswordKey passwordKey = TestBaseUtil.createEcKeyPair();
 
-        setAuthenticationArgs.setPublicKey(passwordKey.getPublicKey());
+        setAuthenticationArgs.setPublicKey(passwordKey.getPublicKey().getPublicKey());
 
         ResponseData<Boolean> response = weIdService.setAuthentication(
             createWeIdResult.getWeId(),
@@ -314,7 +314,7 @@ public class TestSetAuthentication extends TestBaseService {
             new WeIdPrivateKey("xxxxxxxxxxxxxxxxxxxxx"));
         LogUtil.info(logger, "setAuthentication", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_INVALID.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }
@@ -332,7 +332,7 @@ public class TestSetAuthentication extends TestBaseService {
         ResponseData<Boolean> response = weIdService.setAuthentication(
             createWeIdResult.getWeId(),
             setAuthenticationArgs,
-            new WeIdPrivateKey(passwordKey.getPrivateKey()));
+            passwordKey.getPrivateKey());
         LogUtil.info(logger, "setAuthentication", response);
 
         Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
@@ -560,7 +560,7 @@ public class TestSetAuthentication extends TestBaseService {
     public void testDelegateSetAuth_weIdIsNotExist() {
 
         PasswordKey passwordKey = TestBaseUtil.createEcKeyPair();
-        String pubKey = passwordKey.getPublicKey();
+        String pubKey = passwordKey.getPublicKey().getPublicKey();
         String weId = createWeId().getWeId();
         weId = weId.replace(weId.substring(weId.length() - 4, weId.length()), "ffff");
         LogUtil.info(logger, "weid", weId);
@@ -569,11 +569,9 @@ public class TestSetAuthentication extends TestBaseService {
         authenticationArgs.setPublicKey(pubKey);
 
         String delegateWeId = createWeIdNew.getWeId();
-        String delegatePrivateKey = this.privateKey;
 
         ResponseData<Boolean> response = weIdService
-            .delegateSetAuthentication(weId, authenticationArgs,
-                new WeIdPrivateKey(delegatePrivateKey));
+            .delegateSetAuthentication(weId, authenticationArgs, privateKey);
         LogUtil.info(logger, "response", response);
         Assert.assertTrue(ErrorCode.WEID_DOES_NOT_EXIST.getCode() == response.getErrorCode()
             || ErrorCode.WEID_INVALID.getCode() == response.getErrorCode());

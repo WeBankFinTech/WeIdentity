@@ -337,7 +337,7 @@ public class TestRemoveAuthorityIssuer extends TestBaseService {
             authorityIssuerService.removeAuthorityIssuer(removeAuthorityIssuerArgs);
         LogUtil.info(logger, "removeAuthorityIssuer", response);
 
-        Assert.assertEquals(ErrorCode.AUTHORITY_ISSUER_ERROR.getCode(),
+        Assert.assertEquals(ErrorCode.AUTHORITY_ISSUER_PRIVATE_KEY_ILLEGAL.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }
@@ -350,8 +350,8 @@ public class TestRemoveAuthorityIssuer extends TestBaseService {
 
         RemoveAuthorityIssuerArgs removeAuthorityIssuerArgs =
             TestBaseUtil.buildRemoveAuthorityIssuerArgs(createWeIdResult, privateKey);
-        String badPrikey = privateKey.substring(0, privateKey.length() - 2);
-        removeAuthorityIssuerArgs.getWeIdPrivateKey().setPrivateKey(badPrikey);
+        WeIdPrivateKey badPrikey = TestBaseUtil.createEcKeyPair().getPrivateKey();
+        removeAuthorityIssuerArgs.setWeIdPrivateKey(badPrikey);
 
         ResponseData<Boolean> response =
             authorityIssuerService.removeAuthorityIssuer(removeAuthorityIssuerArgs);
@@ -423,8 +423,7 @@ public class TestRemoveAuthorityIssuer extends TestBaseService {
 
         RemoveAuthorityIssuerArgs removeAuthorityIssuerArgs =
             TestBaseUtil.buildRemoveAuthorityIssuerArgs(createWeId, privateKey);
-        removeAuthorityIssuerArgs.getWeIdPrivateKey()
-            .setPrivateKey(TestBaseUtil.createEcKeyPair().getPrivateKey());
+        removeAuthorityIssuerArgs.setWeIdPrivateKey(TestBaseUtil.createEcKeyPair().getPrivateKey());
 
         ResponseData<Boolean> response =
             authorityIssuerService.removeAuthorityIssuer(removeAuthorityIssuerArgs);

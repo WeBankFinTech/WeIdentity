@@ -54,8 +54,7 @@ public class TestRemoveIssuerFromIssuerType extends TestBaseService {
         callerAuth.setWeId(createWeId.getWeId());
         callerAuth.setWeIdPublicKeyId(createWeId.getUserWeIdPublicKey().getPublicKey());
         callerAuth.setWeIdPrivateKey(createWeId.getUserWeIdPrivateKey());
-        authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(),
-            new WeIdPrivateKey(privateKey));
+        authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(), privateKey);
 
         issuer = super.createWeId();
         ResponseData<Boolean> response = authorityIssuerService

@@ -269,7 +269,7 @@ public class TestCreateWeId2 extends TestBaseService {
         ResponseData<String> response = weIdService.createWeId(createWeIdArgs);
         LogUtil.info(logger, "createWeId", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_INVALID.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_PUBLICKEY_AND_PRIVATEKEY_NOT_MATCHED.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(StringUtils.EMPTY, response.getResult());
     }
@@ -321,7 +321,7 @@ public class TestCreateWeId2 extends TestBaseService {
         ResponseData<String> response = weIdService.createWeId(createWeIdArgs);
         LogUtil.info(logger, "createWeId", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_INVALID.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_PUBLICKEY_AND_PRIVATEKEY_NOT_MATCHED.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(StringUtils.EMPTY, response.getResult());
     }
@@ -355,7 +355,7 @@ public class TestCreateWeId2 extends TestBaseService {
 
         CreateWeIdArgs createWeIdArgs = TestBaseUtil.buildCreateWeIdArgs();
         PasswordKey passwordKey = TestBaseUtil.createEcKeyPair();
-        createWeIdArgs.getWeIdPrivateKey().setPrivateKey(passwordKey.getPrivateKey());
+        createWeIdArgs.setWeIdPrivateKey(passwordKey.getPrivateKey());
 
         ResponseData<String> response = weIdService.createWeId(createWeIdArgs);
         LogUtil.info(logger, "createWeId", response);
@@ -404,9 +404,11 @@ public class TestCreateWeId2 extends TestBaseService {
 
         new MockUp<BaseEngine>() {
             @Mock
-            public <T> T reloadContract(String contractAddress, String privateKey, Class<T> cls)
-                throws PrivateKeyIllegalException {
-
+            public <T> T reloadContract(
+                String contractAddress, 
+                WeIdPrivateKey privateKey,
+                Class<T> cls
+            ) throws PrivateKeyIllegalException {
                 throw new PrivateKeyIllegalException();
             }
         };

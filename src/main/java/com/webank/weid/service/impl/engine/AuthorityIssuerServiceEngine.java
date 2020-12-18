@@ -22,6 +22,7 @@ package com.webank.weid.service.impl.engine;
 import java.util.List;
 
 import com.webank.weid.protocol.base.AuthorityIssuer;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.RegisterAuthorityIssuerArgs;
 import com.webank.weid.protocol.request.RemoveAuthorityIssuerArgs;
 import com.webank.weid.protocol.response.ResponseData;
@@ -86,7 +87,7 @@ public interface AuthorityIssuerServiceEngine extends ReloadStaticContract {
     public ResponseData<Boolean> removeIssuer(
         String issuerType,
         String issuerAddress,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     /**
@@ -119,7 +120,7 @@ public interface AuthorityIssuerServiceEngine extends ReloadStaticContract {
      * @param privateKey the caller's private key
      * @return result
      */
-    public ResponseData<Boolean> registerIssuerType(String issuerType, String privateKey);
+    public ResponseData<Boolean> registerIssuerType(String issuerType, WeIdPrivateKey privateKey);
 
     /**
      * call specific issuer contract to add issuer.
@@ -132,10 +133,14 @@ public interface AuthorityIssuerServiceEngine extends ReloadStaticContract {
     public ResponseData<Boolean> addIssuer(
         String issuerType,
         String issuerAddress,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     public ResponseData<String> getWeIdFromOrgId(String orgId);
 
-    public ResponseData<Boolean> recognizeWeId(Boolean isRecognize, String addr, String privateKey);
+    public ResponseData<Boolean> recognizeWeId(
+        Boolean isRecognize, 
+        String addr, 
+        WeIdPrivateKey privateKey
+    );
 }

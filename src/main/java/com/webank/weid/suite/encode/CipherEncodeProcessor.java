@@ -19,7 +19,6 @@
 
 package com.webank.weid.suite.encode;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -216,8 +215,7 @@ public class CipherEncodeProcessor extends BaseService implements EncodeProcesso
         if (encodeData.getWeIdAuthentication() != null) {
             String signValue = DataToolUtils.secp256k1Sign(
                 encodeData.getId(),
-                new BigInteger(
-                    encodeData.getWeIdAuthentication().getWeIdPrivateKey().getPrivateKey())
+                encodeData.getWeIdAuthentication().getWeIdPrivateKey()
             );
             args.setSignValue(signValue);
             args.setWeId(encodeData.getWeIdAuthentication().getWeId());

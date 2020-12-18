@@ -34,7 +34,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
 
 import com.webank.weid.protocol.base.EndpointInfo;
 import com.webank.weid.util.DataToolUtils;
@@ -77,8 +76,8 @@ public class EndpointDataUtil {
     private static synchronized void loadPropsFromFile() {
         props = new Properties();
         try {
-            ClassPathResource resource = new ClassPathResource(CENTRAL_DATA);
-            InputStream input = resource.getInputStream();
+            InputStream input = EndpointDataUtil.class
+                .getClassLoader().getResourceAsStream(CENTRAL_DATA);
             props.load(input);
             logger.info("loadPropsFromFile finish...");
         } catch (Exception e) {
@@ -92,8 +91,9 @@ public class EndpointDataUtil {
      * @throws Exception when File does not exist
      */
     public static synchronized void saveEndpointsToFile() throws Exception {
-        ClassPathResource resource = new ClassPathResource(CENTRAL_DATA);
-        File file = resource.getFile();
+        String path = EndpointDataUtil.class
+            .getClassLoader().getResource(CENTRAL_DATA).getPath();
+        File file = new File(path);
         props = new Properties();
         int index = 1;
         for (EndpointInfo endpointInfo : endpointInfoList) {

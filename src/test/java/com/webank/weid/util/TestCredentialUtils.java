@@ -32,6 +32,7 @@ import com.webank.weid.constant.CredentialConstant.CredentialProofType;
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.constant.ParamKeyConstant;
 import com.webank.weid.protocol.base.Credential;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.CreateCredentialArgs;
 
 /**
@@ -82,7 +83,8 @@ public class TestCredentialUtils {
         arg.setProof(proof);
         String privateKey =
             "58317564669857453586637110679746575832914889677346283755719850144028639639651";
-        Assert.assertNotNull(CredentialUtils.getCredentialSignature(arg, privateKey, null));
+        Assert.assertNotNull(CredentialUtils.getCredentialSignature(
+            arg, new WeIdPrivateKey(privateKey), null));
         String fh = CredentialUtils.getFieldHash(arg);
         Assert.assertNotNull(fh);
         result = CredentialUtils.extractCredentialMetadata(arg);

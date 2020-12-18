@@ -19,15 +19,17 @@
 
 package com.webank.weid.util;
 
-import java.math.BigInteger;
-
-import com.lambdaworks.codec.Base64;
-import org.fisco.bcos.web3j.crypto.ECKeyPair;
-import org.fisco.bcos.web3j.crypto.Sign;
+import org.apache.commons.codec.binary.Base64;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.crypto.signature.ECDSASignatureResult;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.webank.weid.protocol.base.WeIdPrivateKey;
+import com.webank.weid.protocol.base.WeIdPublicKey;
+import com.webank.weid.suite.api.crypto.params.KeyGenerator;
 
 /**
  * Test SignatureUtils.
@@ -44,22 +46,21 @@ public class TestSignatureUtils {
 
         String privateKey =
             "58317564669857453586637110679746575832914889677346283755719850144028639639651";
-        BigInteger publicKey = DataToolUtils.publicKeyFromPrivate(new BigInteger(privateKey));
-        logger.info("publicKey:{} ", publicKey);
+        WeIdPublicKey publicKey = KeyGenerator.publicKeyFromPrivate(
+            new WeIdPrivateKey(privateKey));
+        logger.info("publicKey:{} ", publicKey.getPublicKey());
 
-        ECKeyPair keyPair = DataToolUtils.createKeyPair();
-        keyPair = DataToolUtils.createKeyPairFromPrivate(new BigInteger(privateKey));
-        logger.info("publicKey:{} ", keyPair.getPublicKey());
-        logger.info("privateKey:{}", keyPair.getPrivateKey());
+        CryptoKeyPair keyPair = KeyGenerator.createKeyPair(new WeIdPrivateKey(privateKey));
+        logger.info("publicKey:{} ", keyPair.getHexPublicKey());
+        logger.info("privateKey:{}", keyPair.getHexPrivateKey());
 
         String str = "hello world...........................yes";
-        Sign.SignatureData sigData = DataToolUtils.secp256k1SignToSignature(str, keyPair);
+        ECDSASignatureResult sigData = DataToolUtils.secp256k1SignToSignature(str, keyPair);
         byte[] serialized = DataToolUtils.simpleSignatureSerialization(sigData);
-        Sign.SignatureData newSigData = DataToolUtils.simpleSignatureDeserialization(serialized);
+        ECDSASignatureResult newSigData = DataToolUtils.simpleSignatureDeserialization(serialized);
         logger.info(newSigData.toString());
-
-        Sign.SignatureData signatureData = DataToolUtils
-            .convertBase64StringToSignatureData(new String(Base64.encode(serialized)));
+        ECDSASignatureResult signatureData = DataToolUtils
+            .convertBase64StringToSignatureData(new String(Base64.encodeBase64(serialized)));
         logger.info(signatureData.toString());
     }
 
@@ -68,10 +69,10 @@ public class TestSignatureUtils {
         String hexPrivKey =
             "58317564669857453586637110679746575832914889677346283755719850144028639639651";
         String msg = "12345";
-        org.fisco.bcos.web3j.crypto.ECKeyPair keyPair
-            = org.fisco.bcos.web3j.crypto.ECKeyPair.create(new BigInteger(hexPrivKey, 10));
-        String sig = DataToolUtils.secp256k1Sign(msg, new BigInteger(hexPrivKey, 10));
-        Boolean result = DataToolUtils.verifySecp256k1Signature(msg, sig, keyPair.getPublicKey());
+        CryptoKeyPair keyPair = KeyGenerator.createKeyPair(new WeIdPrivateKey(hexPrivKey));
+        String sig = DataToolUtils.secp256k1Sign(msg, new WeIdPrivateKey(hexPrivKey));
+        Boolean result = DataToolUtils.verifySecp256k1Signature(
+            msg, sig, new WeIdPublicKey(keyPair.getHexPublicKey()));
         Assert.assertTrue(result);
     }
 }

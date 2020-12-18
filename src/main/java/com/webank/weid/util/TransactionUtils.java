@@ -31,14 +31,14 @@ import java.util.Random;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.abi.datatypes.Address;
-import org.fisco.bcos.web3j.abi.datatypes.DynamicBytes;
-import org.fisco.bcos.web3j.abi.datatypes.StaticArray;
-import org.fisco.bcos.web3j.abi.datatypes.Type;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Int256;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Uint256;
-import org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.fisco.bcos.sdk.abi.datatypes.Address;
+import org.fisco.bcos.sdk.abi.datatypes.DynamicBytes;
+import org.fisco.bcos.sdk.abi.datatypes.StaticArray;
+import org.fisco.bcos.sdk.abi.datatypes.Type;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Bytes32;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Int256;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Uint256;
+import org.fisco.bcos.sdk.model.TransactionReceipt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +47,7 @@ import com.webank.weid.constant.JsonSchemaConstant;
 import com.webank.weid.constant.ParamKeyConstant;
 import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.protocol.base.CptBaseInfo;
+import com.webank.weid.protocol.base.WeIdPublicKey;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.protocol.response.RsvSignature;
 import com.webank.weid.protocol.response.TransactionInfo;
@@ -84,7 +85,7 @@ public class TransactionUtils {
             logger.error("[createWeId]: input parameter publickey is null.");
             return new ResponseData<>(null, ErrorCode.WEID_PUBLICKEY_INVALID);
         }
-        String weId = WeIdUtils.convertPublicKeyToWeId(publicKey);
+        String weId = WeIdUtils.convertPublicKeyToWeId(new WeIdPublicKey(publicKey));
         String addr = WeIdUtils.convertWeIdToAddress(weId);
         if (!WeIdUtils.isValidAddress(addr)) {
             logger.error("[createWeId]: input parameter publickey is invalid.");
@@ -364,7 +365,7 @@ public class TransactionUtils {
         BigInteger retCode,
         BigInteger cptId,
         BigInteger cptVersion,
-        org.fisco.bcos.web3j.protocol.core.methods.response.TransactionReceipt receipt) {
+        org.fisco.bcos.sdk.model.TransactionReceipt receipt) {
 
         TransactionInfo info = new TransactionInfo(receipt);
         // register

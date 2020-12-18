@@ -363,7 +363,7 @@ public class TestSetService extends TestBaseService {
         ResponseData<Boolean> response = weIdService.setService(
             createWeIdResult.getWeId(),
             setServiceArgs,
-            new WeIdPrivateKey(passwordKey.getPrivateKey()));
+            passwordKey.getPrivateKey());
         LogUtil.info(logger, "setService", response);
 
         Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
@@ -397,7 +397,7 @@ public class TestSetService extends TestBaseService {
             createWeIdResult.getWeId(), setServiceArgs, new WeIdPrivateKey("xxxxxxx"));
         LogUtil.info(logger, "setService", response);
 
-        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_INVALID.getCode(),
+        Assert.assertEquals(ErrorCode.WEID_PRIVATEKEY_DOES_NOT_MATCH.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }

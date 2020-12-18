@@ -62,14 +62,13 @@ public class TestVerifyCredentialWithSpecifiedPubKey extends TestBaseService {
             TestBaseUtil.buildCreateCredentialArgs(createWeIdResultWithSetAttr);
         createCredentialArgs.setCptId(cptBaseInfo.getCptId());
 
-        createCredentialArgs.getWeIdPrivateKey().setPrivateKey(newPasswordKey.getPrivateKey());
+        createCredentialArgs.setWeIdPrivateKey(newPasswordKey.getPrivateKey());
 
         CredentialWrapper credentialWrapper = super.createCredential(createCredentialArgs);
 
-        WeIdPublicKey weIdPublicKey = new WeIdPublicKey();
-        weIdPublicKey.setPublicKey(newPasswordKey.getPublicKey());
         ResponseData<Boolean> response =
-            credentialService.verifyCredentialWithSpecifiedPubKey(credentialWrapper, weIdPublicKey);
+            credentialService.verifyCredentialWithSpecifiedPubKey(
+                credentialWrapper, newPasswordKey.getPublicKey());
         LogUtil.info(logger, "verifyCredentialWithSpecifiedPubKey", response);
 
         Assert.assertEquals(ErrorCode.SUCCESS.getCode(), response.getErrorCode().intValue());
@@ -86,16 +85,15 @@ public class TestVerifyCredentialWithSpecifiedPubKey extends TestBaseService {
             TestBaseUtil.buildCreateCredentialArgs(createWeIdResultWithSetAttr);
         createCredentialArgs.setCptId(cptBaseInfo.getCptId());
 
-        createCredentialArgs.getWeIdPrivateKey().setPrivateKey(newPasswordKey.getPrivateKey());
+        createCredentialArgs.setWeIdPrivateKey(newPasswordKey.getPrivateKey());
 
         CredentialWrapper credentialWrapper = super.createCredential(createCredentialArgs);
 
         PasswordKey passwordKey = TestBaseUtil.createEcKeyPair();
-        WeIdPublicKey weIdPublicKey = new WeIdPublicKey();
-        weIdPublicKey.setPublicKey(passwordKey.getPublicKey());
 
         ResponseData<Boolean> response =
-            credentialService.verifyCredentialWithSpecifiedPubKey(credentialWrapper, weIdPublicKey);
+            credentialService.verifyCredentialWithSpecifiedPubKey(
+                credentialWrapper, passwordKey.getPublicKey());
         LogUtil.info(logger, "verifyCredentialWithSpecifiedPubKey", response);
 
         Assert.assertEquals(ErrorCode.CREDENTIAL_VERIFY_FAIL.getCode(),
@@ -113,7 +111,7 @@ public class TestVerifyCredentialWithSpecifiedPubKey extends TestBaseService {
             TestBaseUtil.buildCreateCredentialArgs(createWeIdResultWithSetAttr);
         createCredentialArgs.setCptId(cptBaseInfo.getCptId());
 
-        createCredentialArgs.getWeIdPrivateKey().setPrivateKey(newPasswordKey.getPrivateKey());
+        createCredentialArgs.setWeIdPrivateKey(newPasswordKey.getPrivateKey());
 
         CredentialWrapper credentialWrapper = super.createCredential(createCredentialArgs);
 
@@ -132,10 +130,9 @@ public class TestVerifyCredentialWithSpecifiedPubKey extends TestBaseService {
     @Test
     public void testVerifyCredentialWithSpecifiedPubKeyCase4() {
 
-        WeIdPublicKey weIdPublicKey = new WeIdPublicKey();
-        weIdPublicKey.setPublicKey(newPasswordKey.getPublicKey());
         ResponseData<Boolean> response =
-            credentialService.verifyCredentialWithSpecifiedPubKey(null, weIdPublicKey);
+            credentialService.verifyCredentialWithSpecifiedPubKey(
+                null, newPasswordKey.getPublicKey());
         LogUtil.info(logger, "verifyCredentialWithSpecifiedPubKey", response);
 
         Assert.assertEquals(ErrorCode.ILLEGAL_INPUT.getCode(), response.getErrorCode().intValue());
@@ -153,7 +150,7 @@ public class TestVerifyCredentialWithSpecifiedPubKey extends TestBaseService {
             TestBaseUtil.buildCreateCredentialArgs(createWeIdResultWithSetAttr);
         createCredentialArgs.setCptId(cptBaseInfo.getCptId());
 
-        createCredentialArgs.getWeIdPrivateKey().setPrivateKey(newPasswordKey.getPrivateKey());
+        createCredentialArgs.setWeIdPrivateKey(newPasswordKey.getPrivateKey());
 
         CredentialWrapper credentialWrapper = super.createCredential(createCredentialArgs);
 
@@ -164,7 +161,7 @@ public class TestVerifyCredentialWithSpecifiedPubKey extends TestBaseService {
             credentialService.verifyCredentialWithSpecifiedPubKey(credentialWrapper, weIdPublicKey);
         LogUtil.info(logger, "verifyCredentialWithSpecifiedPubKey", response);
 
-        Assert.assertEquals(ErrorCode.CREDENTIAL_ERROR.getCode(),
+        Assert.assertEquals(ErrorCode.CREDENTIAL_VERIFY_FAIL.getCode(),
             response.getErrorCode().intValue());
         Assert.assertEquals(false, response.getResult());
     }

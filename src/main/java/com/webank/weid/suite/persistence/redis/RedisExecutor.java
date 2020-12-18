@@ -207,12 +207,12 @@ public class RedisExecutor {
 
         ResponseData<Integer> result = new ResponseData<Integer>();
         List<DefaultValue> value = new ArrayList<>();
-        RBatch rbatch = client.createBatch();
         try {
             if (client == null) {
                 return
                         new ResponseData<Integer>(null, ErrorCode.PERSISTENCE_GET_CONNECTION_ERROR);
             }
+            RBatch rbatch = client.createBatch();
             List<Object> values = dataList.get(dataList.size() - 1);
             int size = values.size();
             for (List<Object> list : dataList) {

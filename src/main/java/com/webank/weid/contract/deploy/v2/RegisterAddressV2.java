@@ -1,29 +1,23 @@
 package com.webank.weid.contract.deploy.v2;
 
-import java.math.BigInteger;
-
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.crypto.Credentials;
-import org.fisco.bcos.web3j.crypto.gm.GenCredential;
-import org.fisco.bcos.web3j.precompile.cns.CnsInfo;
-import org.fisco.bcos.web3j.precompile.cns.CnsService;
-import org.fisco.bcos.web3j.protocol.Web3j;
-import org.fisco.bcos.web3j.tx.gas.StaticGasProvider;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsInfo;
+import org.fisco.bcos.sdk.contract.precompiled.cns.CnsService;
+import org.fisco.bcos.sdk.crypto.keypair.CryptoKeyPair;
+import org.fisco.bcos.sdk.model.RetCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.webank.weid.constant.CnsType;
 import com.webank.weid.constant.ErrorCode;
-import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.contract.v2.DataBucket;
 import com.webank.weid.exception.WeIdBaseException;
 import com.webank.weid.protocol.base.WeIdPrivateKey;
-import com.webank.weid.protocol.response.CnsResponse;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.service.BaseService;
 import com.webank.weid.service.impl.engine.DataBucketServiceEngine;
 import com.webank.weid.service.impl.engine.fiscov2.DataBucketServiceEngineV2;
-import com.webank.weid.util.DataToolUtils;
+import com.webank.weid.suite.api.crypto.params.KeyGenerator;
 
 public class RegisterAddressV2 {
 
@@ -32,13 +26,13 @@ public class RegisterAddressV2 {
      */
     private static final Logger logger = LoggerFactory.getLogger(RegisterAddressV2.class);
 
-    private static Credentials credentials;
+    private static CryptoKeyPair cryptoKeyPair;
 
-    private static Credentials getCredentials(String inputPrivateKey) {
-        if (credentials == null) {
-            credentials = GenCredential.create(new BigInteger(inputPrivateKey).toString(16));
+    private static CryptoKeyPair getCryptoKeyPair(WeIdPrivateKey inputPrivateKey) {
+        if (cryptoKeyPair == null) {
+            cryptoKeyPair = KeyGenerator.createKeyPair(inputPrivateKey);
         }
-        return credentials;
+        return cryptoKeyPair;
     }
 
     private static DataBucketServiceEngine getBucket(CnsType cnsType) {
@@ -87,7 +81,6 @@ public class RegisterAddressV2 {
             "[registerBucketToCns] begin register bucket to CNS, type = {}.", 
             cnsType.getName()
         );
-        String privateKey = weIdPrivateKey.getPrivateKey();
         CnsInfo cnsInfo = BaseService.getBucketByCns(cnsType);
         //如果地址是为空则说明是首次注册
         if (cnsInfo != null && StringUtils.isNotBlank(cnsInfo.getAddress())) {
@@ -96,13 +89,12 @@ public class RegisterAddressV2 {
         }
         try {
             //先进行地址部署
-            String bucketAddr = deployBucket(privateKey);
-            String resultJson = 
-                new CnsService((Web3j)BaseService.getWeb3j(), getCredentials(privateKey))
-                .registerCns(cnsType.getName(), cnsType.getVersion(), bucketAddr, DataBucket.ABI);
-            CnsResponse result = DataToolUtils.deserialize(resultJson, CnsResponse.class);
-            if (result.getCode() != 0) {
-                throw new WeIdBaseException(result.getCode() + "-" + result.getMsg());
+            String bucketAddr = deployBucket(weIdPrivateKey);
+            RetCode retCode = 
+                new CnsService(BaseService.getClient(), getCryptoKeyPair(weIdPrivateKey))
+                .registerCNS(cnsType.getName(), cnsType.getVersion(), bucketAddr, DataBucket.ABI);
+            if (retCode.getCode() != 1) {
+                throw new WeIdBaseException(retCode.getCode() + "-" + retCode.getMessage());
             }
             logger.info("[registerBucketToCns] the bucket register successfully.");
         } catch (WeIdBaseException e) {
@@ -114,13 +106,13 @@ public class RegisterAddressV2 {
         }
     }
     
-    private static String deployBucket(String privateKey) throws Exception {
+    private static String deployBucket(WeIdPrivateKey privateKey) throws Exception {
         logger.info("[deployBucket] begin deploy bucket.");
         //先进行地址部署
         DataBucket dataBucket = DataBucket.deploy(
-            (Web3j)BaseService.getWeb3j(),
-            getCredentials(privateKey), 
-            new StaticGasProvider(WeIdConstant.GAS_PRICE, WeIdConstant.GAS_LIMIT)).send();
+            BaseService.getClient(),
+            getCryptoKeyPair(privateKey)
+        );
         return dataBucket.getContractAddress();
     }
     

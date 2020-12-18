@@ -136,7 +136,7 @@ public class AuthorityIssuerServiceImpl extends AbstractService implements Autho
         }
         String addr = WeIdUtils.convertWeIdToAddress(weId);
         try {
-            return authEngine.recognizeWeId(true, addr, weIdPrivateKey.getPrivateKey());
+            return authEngine.recognizeWeId(true, addr, weIdPrivateKey);
         } catch (Exception e) {
             logger.error("Failed to recognize authority issuer.", e);
             return new ResponseData<>(false, ErrorCode.AUTHORITY_ISSUER_ERROR.getCode(),
@@ -162,7 +162,7 @@ public class AuthorityIssuerServiceImpl extends AbstractService implements Autho
         }
         String addr = WeIdUtils.convertWeIdToAddress(weId);
         try {
-            return authEngine.recognizeWeId(false, addr, weIdPrivateKey.getPrivateKey());
+            return authEngine.recognizeWeId(false, addr, weIdPrivateKey);
         } catch (Exception e) {
             logger.error("Failed to recognize authority issuer.", e);
             return new ResponseData<>(false, ErrorCode.AUTHORITY_ISSUER_ERROR.getCode(),
@@ -243,7 +243,7 @@ public class AuthorityIssuerServiceImpl extends AbstractService implements Autho
         }
         try {
             return authEngine
-                .registerIssuerType(issuerType, callerAuth.getWeIdPrivateKey().getPrivateKey());
+                .registerIssuerType(issuerType, callerAuth.getWeIdPrivateKey());
         } catch (Exception e) {
             logger.error("register issuer type failed.", e);
             return new ResponseData<>(false, ErrorCode.AUTHORITY_ISSUER_ERROR);
@@ -273,7 +273,7 @@ public class AuthorityIssuerServiceImpl extends AbstractService implements Autho
         try {
             String issuerAddress = WeIdUtils.convertWeIdToAddress(targetIssuerWeId);
             return authEngine.addIssuer(issuerType, issuerAddress,
-                callerAuth.getWeIdPrivateKey().getPrivateKey());
+                callerAuth.getWeIdPrivateKey());
         } catch (Exception e) {
             logger.error("add issuer into type failed.", e);
             return new ResponseData<>(false, ErrorCode.AUTHORITY_ISSUER_ERROR);
@@ -304,7 +304,7 @@ public class AuthorityIssuerServiceImpl extends AbstractService implements Autho
             return authEngine.removeIssuer(
                 issuerType,
                 issuerAddress,
-                callerAuth.getWeIdPrivateKey().getPrivateKey());
+                callerAuth.getWeIdPrivateKey());
         } catch (Exception e) {
             logger.error("remove issuer from type failed.", e);
             return new ResponseData<>(false, ErrorCode.AUTHORITY_ISSUER_ERROR);

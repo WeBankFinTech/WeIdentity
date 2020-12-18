@@ -69,8 +69,8 @@ public class TestIsAuthorityIssuer extends TestBaseService {
             authorityIssuerService.queryAuthorityIssuerInfo(createWeId.getWeId()).getResult();
         Assert.assertFalse(authorityIssuer.isRecognized());
 
-        response = authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(),
-            new WeIdPrivateKey(privateKey));
+        response = authorityIssuerService.recognizeAuthorityIssuer(
+            createWeId.getWeId(), privateKey);
         Assert.assertTrue(response.getResult());
         response = authorityIssuerService.isAuthorityIssuer(createWeId.getWeId());
         Assert.assertTrue(response.getResult());
@@ -78,18 +78,17 @@ public class TestIsAuthorityIssuer extends TestBaseService {
             authorityIssuerService.queryAuthorityIssuerInfo(createWeId.getWeId()).getResult();
         Assert.assertFalse(authorityIssuer.isRecognized());
         authorityIssuerService
-            .deRecognizeAuthorityIssuer(createWeId.getWeId(), new WeIdPrivateKey(privateKey));
+            .deRecognizeAuthorityIssuer(createWeId.getWeId(), privateKey);
         response = authorityIssuerService.isAuthorityIssuer(createWeId.getWeId());
         Assert.assertFalse(response.getResult());
 
         response = authorityIssuerService.recognizeAuthorityIssuer(
-            createWeIdWithSetAttr().getWeId(), new WeIdPrivateKey(privateKey));
+            createWeIdWithSetAttr().getWeId(), privateKey);
         Assert.assertFalse(response.getResult());
         Assert.assertEquals(response.getErrorCode().intValue(),
             ErrorCode.AUTHORITY_ISSUER_CONTRACT_ERROR_NOT_EXISTS.getCode());
 
-        authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(),
-            new WeIdPrivateKey(privateKey));
+        authorityIssuerService.recognizeAuthorityIssuer(createWeId.getWeId(), privateKey);
         response = authorityIssuerService.deRecognizeAuthorityIssuer(createWeId.getWeId(),
             new WeIdPrivateKey("11111111"));
         Assert.assertFalse(response.getResult());

@@ -22,6 +22,7 @@ package com.webank.weid.service.impl.engine;
 import java.util.List;
 
 import com.webank.weid.protocol.base.EvidenceInfo;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.response.ResponseData;
 
 public interface EvidenceServiceEngine {
@@ -31,7 +32,7 @@ public interface EvidenceServiceEngine {
         String signature,
         String log,
         Long timestamp,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     ResponseData<List<Boolean>> batchCreateEvidence(
@@ -40,7 +41,7 @@ public interface EvidenceServiceEngine {
         List<String> logs,
         List<Long> timestamp,
         List<String> signers,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     ResponseData<Boolean> addLog(
@@ -48,7 +49,7 @@ public interface EvidenceServiceEngine {
         String sig,
         String log,
         Long timestamp,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     ResponseData<Boolean> addLogByCustomKey(
@@ -57,7 +58,7 @@ public interface EvidenceServiceEngine {
         String log,
         Long timestamp,
         String customKey,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     ResponseData<String> getHashByCustomKey(String customKey);
@@ -68,7 +69,7 @@ public interface EvidenceServiceEngine {
         String log,
         Long timestamp,
         String customKey,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     ResponseData<List<Boolean>> batchCreateEvidenceWithCustomKey(
@@ -78,7 +79,7 @@ public interface EvidenceServiceEngine {
         List<Long> timestamps,
         List<String> signers,
         List<String> customKeys,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 
     ResponseData<EvidenceInfo> getInfo(String evidenceAddress);
@@ -90,6 +91,6 @@ public interface EvidenceServiceEngine {
         String key,
         String value,
         Long timestamp,
-        String privateKey
+        WeIdPrivateKey privateKey
     );
 }

@@ -19,7 +19,6 @@
 
 package com.webank.weid.util;
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,7 +30,7 @@ import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.fisco.bcos.web3j.abi.datatypes.generated.Bytes32;
+import org.fisco.bcos.sdk.abi.datatypes.generated.Bytes32;
 
 import com.webank.weid.constant.CredentialConstant;
 import com.webank.weid.constant.CredentialConstant.CredentialProofType;
@@ -42,6 +41,7 @@ import com.webank.weid.constant.WeIdConstant;
 import com.webank.weid.protocol.base.Credential;
 import com.webank.weid.protocol.base.CredentialPojo;
 import com.webank.weid.protocol.base.CredentialWrapper;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.CreateCredentialArgs;
 
 /**
@@ -108,7 +108,7 @@ public final class CredentialUtils {
      */
     public static Map<String, String> buildCredentialProof(
         Credential credential,
-        String privateKey,
+        WeIdPrivateKey privateKey,
         Map<String, Object> disclosureMap) {
         Map<String, String> proof = new HashMap<>();
         proof.put(ParamKeyConstant.PROOF_CREATED, credential.getIssuanceDate().toString());
@@ -310,11 +310,14 @@ public final class CredentialUtils {
      * @param disclosureMap the disclosure map
      * @return the String signature value
      */
-    public static String getCredentialSignature(Credential credential, String privateKey,
-        Map<String, Object> disclosureMap) {
+    public static String getCredentialSignature(
+        Credential credential, 
+        WeIdPrivateKey privateKey,
+        Map<String, Object> disclosureMap
+    ) {
         String rawData = CredentialUtils
             .getCredentialThumbprintWithoutSig(credential, disclosureMap);
-        return DataToolUtils.secp256k1Sign(rawData, new BigInteger(privateKey));
+        return DataToolUtils.secp256k1Sign(rawData, privateKey);
     }
 
     /**

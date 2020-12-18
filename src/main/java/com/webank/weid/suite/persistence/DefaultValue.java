@@ -19,7 +19,6 @@
 
 package com.webank.weid.suite.persistence;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import lombok.Data;

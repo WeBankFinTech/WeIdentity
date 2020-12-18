@@ -17,6 +17,7 @@ import com.webank.weid.constant.DataDriverConstant;
 import com.webank.weid.constant.ErrorCode;
 import com.webank.weid.constant.ParamKeyConstant;
 import com.webank.weid.constant.WeIdConstant;
+import com.webank.weid.protocol.base.WeIdPrivateKey;
 import com.webank.weid.protocol.request.TransactionArgs;
 import com.webank.weid.protocol.response.ResponseData;
 import com.webank.weid.suite.api.persistence.PersistenceFactory;
@@ -225,8 +226,8 @@ public class BatchTransactionUtils {
             content.append(args[i]).append(",");
         }
         String privateKey = args[length - 2];
-
-        String weId = WeIdUtils.getWeIdFromPrivateKey(privateKey);
+        WeIdPrivateKey weIdPrivateKey = new WeIdPrivateKey(privateKey);
+        String weId = WeIdUtils.getWeIdFromPrivateKey(weIdPrivateKey);
 
         //将私钥进行对称加密后存到数据库里
         //String encryptKey = CryptServiceFactory.getCryptService(CryptType.AES)
